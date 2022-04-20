@@ -1,20 +1,26 @@
 {
-  "name": "queryparser",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "name": "query-parser",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/PlayerGhost/Query-Parser.git"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/PlayerGhost/Query-Parser/issues"
+  "homepage": "https://github.com/PlayerGhost/Query-Parser#readme",
+  "dependencies": {
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0"
   },
-  "homepage": "https://github.com/PlayerGhost/Query-Parser#readme"
+  "devDependencies": {
+    "@types/react": "^18.0.0",
+    "@types/react-dom": "^18.0.0",
+    "@vitejs/plugin-react": "^1.3.0",
+    "vite": "^2.9.5"
+  }
 }

@@ -1,0 +1,16 @@
+.main {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	gap: 15px;
+	padding: 25px;
+}
+
+#query {
+	padding: 10px;
+}
+
+#parse-query {
+	padding: 10px 15px;
+	font-weight: 700;
+}
