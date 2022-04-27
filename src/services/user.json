@@ -1,6 +1,0 @@
-{
-  "Usuario": {
-    "idUsuario": ["int", "13"],
-    "nome": ["string", "10"]
-  }
-}
