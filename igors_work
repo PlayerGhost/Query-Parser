@@ -1,0 +1,24 @@
+testes = ["SELECT a.name,b.capital FROM countries AS a,countries AS b WHERE a.name = b.capital"]
+arguments = testes[0].split(' ')
+
+
+const result = () => {
+    let aux=""
+
+    for([index, word] of arguments.entries()){
+        switch(word){
+            case "SELECT":
+                aux+="π"+arguments[index+1]
+                break
+            case "WHERE":
+                aux+=" σ"
+                for(arg of arguments.slice(index+1, arguments.length)){
+                    aux+=arg
+                }
+                break
+        }
+    }
+    return aux
+}
+
+console.log(result())
