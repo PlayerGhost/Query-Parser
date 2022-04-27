@@ -1,4 +1,4 @@
-import { removeWhitespaces } from '../services/backend';
+import { removeWhitespaces } from '../helpers/regex.js';
 import './MainPage.css';
 
 export default function MainPage() {
@@ -13,7 +13,7 @@ export default function MainPage() {
 				<input type="text" id="query" placeholder="Insira!" />
 				<button id="parse-query">Receba!</button>
 			</div>
-			<div class="results">
+			<div className="results">
 				<h2>Resultado da consulta</h2>
 				<div id="results-body"></div>
 			</div>
