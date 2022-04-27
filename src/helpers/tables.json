@@ -5,16 +5,16 @@
 		"logradouro": ["string", 45],
 		"numero": ["string", 45],
 		"bairro": ["string", 45],
-		"cep": ["string", 10],
-		"uf": ["string", 10],
-		"datanascimento": ["string", 10]
+		"cep": ["string", 8],
+		"uf": ["string", 2],
+		"datanascimento": ["string", null]
 	},
 	"contas": {
 		"idconta": ["int", null],
 		"descricao": ["string", 45],
 		"tipoconta_idtipoconta": ["int", null],
 		"usuario_idusuario": ["int", null],
-		"saldoinicial": ["string", 10]
+		"saldoinicial": ["string", 21]
 	},
 	"tipoconta": {
 		"idtipoconta": ["int", null],
@@ -22,19 +22,19 @@
 	},
 	"movimentacao": {
 		"idmovimentacao": ["int", null],
-		"datamovimentacao": ["string", 10],
-		"descricao": ["string", 10],
+		"datamovimentacao": ["string", null],
+		"descricao": ["string", 45],
 		"tipomovimento_idtipomovimento": ["int", null],
 		"categoria_idcategoria": ["int", null],
 		"contas_idconta": ["int", null],
-		"valor": ["string", 10]
+		"valor": ["string", 21]
 	},
 	"tipomovimento": {
 		"idtipomovimento": ["int", null],
-		"descmovimentacao": ["string", 10]
+		"descmovimentacao": ["string", 45]
 	},
 	"categoria": {
 		"idcategoria": ["int", null],
-		"desccategoria": ["string", 10]
+		"desccategoria": ["string", 45]
 	}
 }
