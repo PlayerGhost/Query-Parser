@@ -1,16 +1,29 @@
 .main {
-	display: flex;
-	flex-direction: column;
-	justify-content: center;
+	display: grid;
+	grid-template-rows: 1fr 4fr;
+	justify-content: stretch;
 	gap: 15px;
 	padding: 25px;
 }
 
+.user-input {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	background: red;
+}
+
+.results {
+	background: blue;
+}
+
 #query {
-	padding: 10px;
+	padding: 10px 15px;
+	border-radius: 10px;
 }
 
 #parse-query {
-	padding: 10px 15px;
+	padding: 10px;
 	font-weight: 700;
+	border-radius: 10px;
 }
