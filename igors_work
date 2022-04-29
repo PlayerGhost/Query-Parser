@@ -1,24 +1,40 @@
-testes = ["SELECT a.name,b.capital FROM countries AS a,countries AS b WHERE a.name = b.capital"]
-arguments = testes[0].split(' ')
+const teste = "Select idusuario, nome, datanascimento, descricao, saldoinicial, UF, Descrição from usuario join contas on usuario.idUsuario = contas.Usuario_idUsuario join tipoconta on tipoconta.idTipoConta = contas.TipoConta_idTipoConta where saldoinicial < 3000 and uf = 'ce' and Descrição <> 'Conta Corrente' and idusuario not in (1,2,3)"
 
+arguments = teste.split(' ')
+
+let bodies = []
 
 const result = () => {
     let aux=""
 
     for([index, word] of arguments.entries()){
+        
         switch(word){
-            case "SELECT":
-                aux+="π"+arguments[index+1]
+            case "Select":
+                arguments[index] = "π"
                 break
-            case "WHERE":
-                aux+=" σ"
-                for(arg of arguments.slice(index+1, arguments.length)){
-                    aux+=arg
-                }
+
+            case "where":
+                bodies.push(aux)
+                aux=""
+                arguments[index] = "σ"
                 break
+
+            case "from":
+                bodies.push(aux)
+                aux=""
+                break
+            case "join":
+                bodies.push(aux)
+                aux=""
+                break
+
         }
+        aux+=word+" "
+        
     }
+    bodies.push(aux)
     return aux
 }
-
-console.log(result())
+result()
+console.log(bodies)
