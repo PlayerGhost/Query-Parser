@@ -1,25 +1,58 @@
-export const removeWhitespaces = (text) => text.split(' ').filter((x) => x);
+// export const removeWhitespaces = (text) => text.split(' ').filter((x) => x);
 
-// TODO Passar texto para maiúsculo antes de verificar pelo regex
+const text = `SELECT NOME, DATANASCIMENTO, DESCRICAO, SALDOINICIAL FROM USUARIO JOIN CONTAS ON USUARIO.IDUSUARIO = CONTAS.USUARIO_IDUSUARIO WHERE SALDOINICIAL >=235 AND UF ='CE' AND CEP <> '62930000';`
+const text2 = `SELECT IDUSUARIO, NOME, DATANASCIMENTO, DESCRICAO, SALDOINICIAL, UF, DESCRICAO FROM USUARIO JOIN CONTAS ON USUARIO.IDUSUARIO = CONTAS.USUARIO_IDUSUARIO JOIN TIPOCONTA ON TIPOCONTA.IDTIPOCONTA = CONTAS.TIPOCONTA_IDTIPOCONTA ;`
 
-const text = "Select nome, datanascimento, descricao, saldoinicial from usuario join contas on usuario.idUsuario = contas.Usuario_idUsuario where saldoinicial >=235 and uf ='ce' and cep <> '62930000';".toUpperCase()
+const examples = [
+    `SELECT NOME, DATANASCIMENTO, DESCRICAO, SALDOINICIAL FROM USUARIO JOIN CONTAS ON USUARIO.IDUSUARIO = CONTAS.USUARIO_IDUSUARIO WHERE SALDOINICIAL >=235 AND UF ='CE' AND CEP <> '62930000';`,
+    `SELECT IDUSUARIO, NOME, DATANASCIMENTO, DESCRICAO, SALDOINICIAL, UF, DESCRICAO FROM USUARIO JOIN CONTAS ON USUARIO.IDUSUARIO = CONTAS.USUARIO_IDUSUARIO JOIN TIPOCONTA ON TIPOCONTA.IDTIPOCONTA = CONTAS.TIPOCONTA_IDTIPOCONTA ;`,
+    'SELECT * FROM USUARIO;',
+    'SELECT *A FROM USUARIO;',
+    'SELECT A, FROM USUARIO;',
+    'SELECT A,A FROM USUARIO;',
+    'SELECT A,A FROM USUARIO',
+    ' FROM USUARIO;',
+    '* FROM USUARIO;',
+    '* FROM USUARIO',
+    'select * FROM USUARIO where id = 1;',
+    'select * FROM USUARIO where id <> 1;',
+    'select * FROM USUARIO where id > 1;',
+    'select * FROM USUARIO where id < 1;',
+    'select * FROM USUARIO where id >= 1;',
+    'select * FROM USUARIO where id <= 1;',
+    'select * FROM USUARIO where id <= 1 and id >= 3;',
+    'select * FROM USUARIO where id <= 1 and ;',
+    'select * FROM USUARIO where id <= 1 and;',
+    'select * FROM USUARIO where id <= ;',
+]
 
-const text2 = "Select idusuario, nome, datanascimento, descricao, saldoinicial, UF, descricao from usuario join contas on usuario.idUsuario = contas.Usuario_idUsuario join tipoconta on tipoconta.idTipoConta = contas.TipoConta_idTipoConta ;".toUpperCase()
+
+// const where = /WHERE [\w]+\s?(((=|<=|<>|>=|<|>)\s?[\w]+)|((IN|NOT IN) [(][\w]+(,\s?[\w]+)+[)]))( AND [\w]+\s?(((=|<=|<>|>=|<|>)\s?[\w]+)|((IN|NOT IN) [(][\w]+(,\s?[\w]+)+[)])))*$/
+
+// const join = /(JOIN [\w]+ ON [\w.]+\s?=\s?[\w.]+)+$/
+
+// const regex = /^SELECT ([*]|([\w]+))(,\s?[\w]+)* FROM [\w]+\s?(( WHERE [\w]+\s?(((=|<=|<>|>=|<|>)\s?[\w '"]+)|((IN|NOT IN) [(][\w '"]+(,\s?[\w "']+)+[)]))( AND [\w]+\s?(((=|<=|<>|>=|<|>)\s?[\w '"]+)|((IN|NOT IN) [(][\w '"]+(,\s?[\w '"]+)+[)])))*)|( JOIN [\w]+ ON [\w.]+\s?=\s?[\w.]+)+( WHERE [\w]+\s?(((=|<=|<>|>=|<|>)\s?[\w '"]+)|((IN|NOT IN) [(][\w '"]+(,\s?[\w '"]+)+[)]))( AND [\w]+\s?(((=|<=|<>|>=|<|>)\s?[\w '"]+)|((IN|NOT IN) [(][\w '"]+(,\s?[\w '"]+)+[)])))*)?)?\s?;$/
 
 
-const where = /WHERE [\w]+\s?(((=|<=|<>|>=|<|>)\s?[\w]+)|((IN|NOT IN) [(][\w]+(,\s?[\w]+)+[)]))( AND [\w]+\s?(((=|<=|<>|>=|<|>)\s?[\w]+)|((IN|NOT IN) [(][\w]+(,\s?[\w]+)+[)])))*$/
+// console.log(text)
+// console.log(text.match(regex))
 
-const join = /(JOIN [\w]+ ON [\w.]+\s?=\s?[\w.]+)+$/
+// console.log(text2)
+// console.log(text2.match(regex))
 
-regex = /^SELECT ([*]|([\w]+))(,\s?[\w]+)* FROM [\w]+\s?(( WHERE [\w]+\s?(((=|<=|<>|>=|<|>)\s?[\w '"]+)|((IN|NOT IN) [(][\w '"]+(,\s?[\w "']+)+[)]))( AND [\w]+\s?(((=|<=|<>|>=|<|>)\s?[\w '"]+)|((IN|NOT IN) [(][\w '"]+(,\s?[\w '"]+)+[)])))*)|( JOIN [\w]+ ON [\w.]+\s?=\s?[\w.]+)+( WHERE [\w]+\s?(((=|<=|<>|>=|<|>)\s?[\w '"]+)|((IN|NOT IN) [(][\w '"]+(,\s?[\w '"]+)+[)]))( AND [\w]+\s?(((=|<=|<>|>=|<|>)\s?[\w '"]+)|((IN|NOT IN) [(][\w '"]+(,\s?[\w '"]+)+[)])))*)?)?\s?;$/
+const regexArray = [
+    /,,+/i,                                          // Vírgulas seguidas
+    /,\s? FROM/i,                                    // vírgula e/ou espaço antes do from
+    /(\*\w|\w+\*)/i,                                 // Asterisco + Letra
+    /\s{2,}/i,                                       // Mais de 1 espaço seguido
+    /^(?!select)/i,                                  // Sem select
+    /[^;]$/i,                                        // Sem ponto e vírgula no final
+    /\w+\s and (?!\w+)/i,                            // AND sem segundo operador
+    /where \w\s(=|<>|<|>|<=|>=)\s?(?!\w+)/i,         // Operadores de comparação sem segundo valor
+]
 
-
-console.log(text)
-console.log(text.match(regex))
-
-console.log(text2)
-console.log(text2.match(regex))
-
-
-//Ainda com alguns problemas(caracteres especiais), mas ta quase
-
+examples.forEach(text => {
+    console.log(`Texto: ${text}`)
+    console.log(`Resultados: [${regexArray.map(r => Boolean(text.match(r)))}]`)
+    console.log("--------------------------------------------------------")
+})
