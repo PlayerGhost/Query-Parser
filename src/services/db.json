@@ -1,0 +1,46 @@
+{
+  "Usuario": {
+    "idUsuario": "",
+    "Nome": "",
+    "Logradouro": "",
+    "Número": "",
+    "Bairro": "",
+    "CEP": "",
+    "UF": "",
+    "DataNascimento": ""
+  },
+
+  "Contas": {
+    "idConta": "",
+    "Descricao": "",
+    "TipoConta_idTipoConta": "",
+    "Usuario_idUsuario": "",
+    "SaldoInicial": ""
+  },
+
+  "tipoconta": {
+    "idTipoConta": "",
+    "Descrição": ""
+  },
+
+  "Movimentacao": {
+    "idMovimentação": "",
+    "DataMovimentacao": "",
+    "Descricao": "",
+    "TipoMovimento_idTipoMovimento": "",
+    "Categoria_idCategoria": "",
+    "Contas_idContas": "",
+    "Valor": ""
+  },
+
+  "TipoMovimento": {
+    "idTipoMovimento": "",
+    "DescMovimentacao": ""
+  },
+
+  "Categoria": {
+    "idCategoria": "",
+    "DescCategoria": ""
+  }
+
+}
