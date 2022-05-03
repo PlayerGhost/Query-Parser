@@ -1,8 +1,5 @@
 // export const removeWhitespaces = (text) => text.split(' ').filter((x) => x);
 
-const text = `SELECT NOME, DATANASCIMENTO, DESCRICAO, SALDOINICIAL FROM USUARIO JOIN CONTAS ON USUARIO.IDUSUARIO = CONTAS.USUARIO_IDUSUARIO WHERE SALDOINICIAL >=235 AND UF ='CE' AND CEP <> '62930000';`
-const text2 = `SELECT IDUSUARIO, NOME, DATANASCIMENTO, DESCRICAO, SALDOINICIAL, UF, DESCRICAO FROM USUARIO JOIN CONTAS ON USUARIO.IDUSUARIO = CONTAS.USUARIO_IDUSUARIO JOIN TIPOCONTA ON TIPOCONTA.IDTIPOCONTA = CONTAS.TIPOCONTA_IDTIPOCONTA ;`
-
 const examples = [
     `SELECT NOME, DATANASCIMENTO, DESCRICAO, SALDOINICIAL FROM USUARIO JOIN CONTAS ON USUARIO.IDUSUARIO = CONTAS.USUARIO_IDUSUARIO WHERE SALDOINICIAL >=235 AND UF ='CE' AND CEP <> '62930000';`,
     `SELECT IDUSUARIO, NOME, DATANASCIMENTO, DESCRICAO, SALDOINICIAL, UF, DESCRICAO FROM USUARIO JOIN CONTAS ON USUARIO.IDUSUARIO = CONTAS.USUARIO_IDUSUARIO JOIN TIPOCONTA ON TIPOCONTA.IDTIPOCONTA = CONTAS.TIPOCONTA_IDTIPOCONTA ;`,
@@ -10,49 +7,70 @@ const examples = [
     'SELECT *A FROM USUARIO;',
     'SELECT A, FROM USUARIO;',
     'SELECT A,A FROM USUARIO;',
-    'SELECT A,A FROM USUARIO',
+    'SELECT A,A FROM USUARIO;',
     ' FROM USUARIO;',
     '* FROM USUARIO;',
-    '* FROM USUARIO',
-    'select * FROM USUARIO where id = 1;',
-    'select * FROM USUARIO where id <> 1;',
-    'select * FROM USUARIO where id > 1;',
-    'select * FROM USUARIO where id < 1;',
-    'select * FROM USUARIO where id >= 1;',
-    'select * FROM USUARIO where id <= 1;',
-    'select * FROM USUARIO where id <= 1 and id >= 3;',
-    'select * FROM USUARIO where id <= 1 and ;',
-    'select * FROM USUARIO where id <= 1 and;',
-    'select * FROM USUARIO where id <= ;',
+    '* FROM USUARIO;',
+    'SELECT * FROM USUARIO WHERE id = 1;',
+    'SELECT * FROM USUARIO WHERE id <> 1;',
+    'SELECT * FROM USUARIO WHERE id > 1;',
+    'SELECT * FROM USUARIO WHERE id < 1;',
+    'SELECT * FROM USUARIO WHERE id >= 1;',
+    'SELECT * FROM USUARIO WHERE id <= 1;',
+    'SELECT * FROM USUARIO WHERE id <= 1 AND id >= 3;',
+    'SELECT * FROM USUARIO WHERE id <= 1 AND ;',
+    'SELECT * FROM USUARIO WHERE id <= 1 AND;',
+    'SELECT * FROM USUARIO WHERE id <= ;',
+    'SELECT FROM USUARIO WHERE id <= ;',
+    'SELECT * FROM USUARIO WHERE;',
+    `SELECT * FROM USUARIO WHERE user = 'renatasasaso sdasasasaaasds addsd' AND X = 1;`,
+    `SELECT * FROM USUARIO WHERE user = 'renato_ddsdasddsddasdsds';`,
+    `SELECT NOME, DATANASCIMENTO, DESCRICAO, SALDOINICIAL FROM USUARIO JOIN CONTAS ON USUARIO.IDUSUARIO = CONTAS.USUARIO_IDUSUARIO WHERE user = 'renato vdsdsadsddasdsdv SDSAD' DSD;`,
+    `SELECT * FROM USUARIO WHERE user = 'renato vdsdsadsddasdsdv SDSAD' DSD;`,
+    `SELECT * FROM USUARIO WHERE user = 'renato' AND;`,
+    `SELECT * FROM USUARIO WHERE user='renato';`
 ]
 
 
-// const where = /WHERE [\w]+\s?(((=|<=|<>|>=|<|>)\s?[\w]+)|((IN|NOT IN) [(][\w]+(,\s?[\w]+)+[)]))( AND [\w]+\s?(((=|<=|<>|>=|<|>)\s?[\w]+)|((IN|NOT IN) [(][\w]+(,\s?[\w]+)+[)])))*$/
+//const chars2 = "([A-ZÇÃÚ0-9]+)(\\.?_?[A-ZÇÃÚ0-9]+)*"
+//const chars2 = "([A-Za-zçãú0-9]+)(\\.?_?[A-Za-zçãú0-9]+)*"
 
-// const join = /(JOIN [\w]+ ON [\w.]+\s?=\s?[\w.]+)+$/
+//const chars2 = "A-Za-zÀ-ÖØ-öø-ÿ0-9"
 
-// const regex = /^SELECT ([*]|([\w]+))(,\s?[\w]+)* FROM [\w]+\s?(( WHERE [\w]+\s?(((=|<=|<>|>=|<|>)\s?[\w '"]+)|((IN|NOT IN) [(][\w '"]+(,\s?[\w "']+)+[)]))( AND [\w]+\s?(((=|<=|<>|>=|<|>)\s?[\w '"]+)|((IN|NOT IN) [(][\w '"]+(,\s?[\w '"]+)+[)])))*)|( JOIN [\w]+ ON [\w.]+\s?=\s?[\w.]+)+( WHERE [\w]+\s?(((=|<=|<>|>=|<|>)\s?[\w '"]+)|((IN|NOT IN) [(][\w '"]+(,\s?[\w '"]+)+[)]))( AND [\w]+\s?(((=|<=|<>|>=|<|>)\s?[\w '"]+)|((IN|NOT IN) [(][\w '"]+(,\s?[\w '"]+)+[)])))*)?)?\s?;$/
+const chars2 = "([A-ZÇÃÚ0-9._]+)"
+
+const select = `SELECT ([*]|(${chars2}))(,\\s?${chars2})* FROM ${chars2}`
+
+const where = `WHERE ${chars2}\\s?((=|<=|<>|>=|<|>)\\s?((${chars2})|'(${chars2}\\s?)+'))( AND ${chars2}\\s?((=|<=|<>|>=|<|>)\\s?((${chars2})|'(${chars2}\\s?)+')))*`
+
+const join = `JOIN ${chars2} ON ${chars2}\\s?=\\s?${chars2}`
+
+const query = `^${select}\\s?(( ${where})?|( ${join})+?( ${where})?)?\\s?;$`
+//const query = `^${select}\\s?( ${where})\\s?;$`
+
+const regex = new RegExp(query);
 
 
-// console.log(text)
-// console.log(text.match(regex))
 
-// console.log(text2)
-// console.log(text2.match(regex))
 
-const regexArray = [
+/*const regexArray = [
     /,,+/i,                                          // Vírgulas seguidas
     /,\s? FROM/i,                                    // vírgula e/ou espaço antes do from
     /(\*\w|\w+\*)/i,                                 // Asterisco + Letra
     /\s{2,}/i,                                       // Mais de 1 espaço seguido
-    /^(?!select)/i,                                  // Sem select
+    /^(?!SELECT)/i,                                  // Sem SELECT
     /[^;]$/i,                                        // Sem ponto e vírgula no final
-    /\w+\s and (?!\w+)/i,                            // AND sem segundo operador
-    /where \w\s(=|<>|<|>|<=|>=)\s?(?!\w+)/i,         // Operadores de comparação sem segundo valor
-]
+    /\w+\s AND (?!\w+)/i,                            // AND sem segundo operador
+    /WHERE \w\s(=|<>|<|>|<=|>=)\s?(?!\w+)/i,         // Operadores de comparação sem segundo valor
+]*/
+
+
 
 examples.forEach(text => {
-    console.log(`Texto: ${text}`)
-    console.log(`Resultados: [${regexArray.map(r => Boolean(text.match(r)))}]`)
+    console.log(`Texto: ${text.toUpperCase()}`)
+    console.log(`Resultados: [${text.toUpperCase().match(regex)}]`)
     console.log("--------------------------------------------------------")
 })
+
+
+console.log(regex)
