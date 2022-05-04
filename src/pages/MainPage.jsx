@@ -1,21 +1,40 @@
-import { removeWhitespaces } from '../helpers/regex.js';
+import { useState } from 'react';
+
+import { validateAttributes } from '../helpers/load-json';
+
 import './MainPage.css';
 
 export default function MainPage() {
-	const text = '    eu sou   uma busca  zudaa  ouoooooo     uuuu !! ';
-	console.log(`[${text}]`);
-	console.log(`[${removeWhitespaces(text)}]`);
+	const [query, setQuery] = useState('');
+
+	const onClick = () => {
+		const tables = ['Usuario', 'Contas'];
+		const columns = ['idUsuario', 'SaldoInicial'];
+		const result = validateAttributes(tables, columns);
+
+		const text = `Tabelas: ${tables}\nAtributos/Colunas: ${columns}\nResultado: ${result}`;
+
+		setQuery(text);
+	};
 
 	return (
 		<div className="main">
 			<div className="user-input">
 				<h2>Processador de consultas</h2>
-				<input type="text" id="query" placeholder="Insira!" />
-				<button id="parse-query">Receba!</button>
+				<input
+					type="text"
+					id="query"
+					placeholder="Insira!"
+					value={query}
+					onChange={(q) => setQuery(q.target.value)}
+				></input>
+				<button id="parse-query" onClick={onClick}>
+					Receba!
+				</button>
 			</div>
 			<div className="results">
 				<h2>Resultado da consulta</h2>
-				<div id="results-body"></div>
+				<div id="results-body">{query}</div>
 			</div>
 		</div>
 	);

@@ -10,11 +10,6 @@
 	display: flex;
 	flex-direction: column;
 	gap: 10px;
-	background: red;
-}
-
-.results {
-	background: blue;
 }
 
 #query {
@@ -26,4 +21,13 @@
 	padding: 10px;
 	font-weight: 700;
 	border-radius: 10px;
+	cursor: pointer;
+	box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+	background-color: #3e8be4;
+	color: white;
+	transition: 150ms opacity;
+}
+
+#parse-query:hover {
+	opacity: 0.8;
 }
