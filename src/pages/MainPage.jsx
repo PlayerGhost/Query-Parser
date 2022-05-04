@@ -1,6 +1,9 @@
 import { useState } from 'react';
 
-import { validateAttributes } from '../helpers/load-json';
+import {
+	getAttributesFromTable,
+	validateAttributes
+} from '../helpers/load-json';
 
 import './MainPage.css';
 
@@ -13,6 +16,7 @@ export default function MainPage() {
 		const result = validateAttributes(tables, columns);
 
 		const text = `Tabelas: ${tables}\nAtributos/Colunas: ${columns}\nResultado: ${result}`;
+		console.log(getAttributesFromTable('Usuario'));
 
 		setQuery(text);
 	};

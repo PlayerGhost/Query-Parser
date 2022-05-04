@@ -19,19 +19,27 @@ export function validateAttributes(tables, columns) {
 
 	if (!validateTables(tables)) {
 		console.error('nao tem todas as tabelas !!!!');
-		return false
+		return false;
 	}
 
 	if (!validateColumns(tables, columns)) {
 		console.error('nao tem todos os atributos!!!!');
-		return false
+		return false;
 	}
 
 	// TODO Passar pra álgebra relacional
 	// TODO Otimizar
 
-	console.log()
-	return true
+	console.log();
+	return true;
+}
+
+export function getAttributesFromTable(table) {
+	if (!validateTables([table])) {
+		throw new Error('Não existe essa tabela no banco de dados');
+	}
+
+	return { [table]: databaseTable[table] };
 }
 
 function validateTables(tables) {
@@ -40,12 +48,8 @@ function validateTables(tables) {
 }
 
 function validateColumns(tables, columns) {
-	const tablesToCheck = Object.keys(databaseTable).filter((x) =>
-		tables.includes(x)
-	);
-
-	const columnsToCheck = tablesToCheck.reduce((y, x) => {
-		return y.concat(Object.keys(databaseTable[x]));
+	const columnsToCheck = tables.reduce((y, x) => {
+		return y.concat(databaseTable[x]);
 	}, []);
 
 	const checkIfColumnExists = (y, x) => y && columnsToCheck.includes(x);
