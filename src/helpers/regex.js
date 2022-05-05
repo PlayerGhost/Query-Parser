@@ -1,5 +1,3 @@
-// export const removeWhitespaces = (text) => text.split(' ').filter((x) => x);
-
 const examples = [
     `SELECT NOME, DATANASCIMENTO, DESCRICAO, SALDOINICIAL FROM USUARIO JOIN CONTAS ON USUARIO.IDUSUARIO = CONTAS.USUARIO_IDUSUARIO WHERE SALDOINICIAL >=235 AND UF ='CE' AND CEP <> '62930000';`,
     `SELECT IDUSUARIO, NOME, DATANASCIMENTO, DESCRICAO, SALDOINICIAL, UF, DESCRICAO FROM USUARIO JOIN CONTAS ON USUARIO.IDUSUARIO = CONTAS.USUARIO_IDUSUARIO JOIN TIPOCONTA ON TIPOCONTA.IDTIPOCONTA = CONTAS.TIPOCONTA_IDTIPOCONTA ;`,
@@ -48,7 +46,7 @@ const join = `JOIN ${chars2} ON ${chars2}\\s?=\\s?${chars2}`
 const query = `^${select}\\s?(( ${where})?|( ${join})+?( ${where})?)?\\s?;$`
 //const query = `^${select}\\s?( ${where})\\s?;$`
 
-const regex = new RegExp(query);
+export const regex = new RegExp(query);
 
 
 
