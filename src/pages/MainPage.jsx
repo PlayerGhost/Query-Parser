@@ -1,9 +1,11 @@
 import { useState } from 'react';
 
-import {
-	getAttributesFromTable,
-	validateAttributes
-} from '../helpers/load-json';
+import { removeWhitespaces } from '../helpers/remove-whitespaces';
+import { regex } from '../helpers/regex';
+// import {
+// 	getAttributesFromTable,
+// 	validateAttributes
+// } from '../helpers/load-json';
 
 import './MainPage.css';
 
@@ -11,12 +13,20 @@ export default function MainPage() {
 	const [query, setQuery] = useState('');
 
 	const onClick = () => {
-		const tables = ['Usuario', 'Contas'];
-		const columns = ['idUsuario', 'SaldoInicial'];
-		const result = validateAttributes(tables, columns);
+		if (!query) {
+			console.warn("Sem query!")
+			return
+		}
 
-		const text = `Tabelas: ${tables}\nAtributos/Colunas: ${columns}\nResultado: ${result}`;
-		console.log(getAttributesFromTable('Usuario'));
+		const filteredQuery = removeWhitespaces(query)
+		if (!filteredQuery.match(regex)) {
+			console.warn('query não passou no regex de verificação inicial!')
+			console.warn('Query filtrada', filteredQuery)
+			console.warn('Regex', regex)
+			return
+		}
+
+		// TODO Organizar dados para ter espaço depois de vírgula
 
 		setQuery(text);
 	};
