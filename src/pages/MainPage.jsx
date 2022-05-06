@@ -1,16 +1,20 @@
-import { useState } from 'react';
+import { useState } from "react"
 
-import { removeWhitespaces } from '../helpers/remove-whitespaces';
-import { regex } from '../helpers/regex';
+import {
+	parseCommaWhitespaces,
+	removeWhitespaces,
+} from "../helpers/text-parser"
+import { regex } from "../helpers/regex"
+import { splitQueryIntoBodies } from "../helpers/relationalAlgebra"
 // import {
 // 	getAttributesFromTable,
 // 	validateAttributes
 // } from '../helpers/load-json';
 
-import './MainPage.css';
+import "./MainPage.css"
 
 export default function MainPage() {
-	const [query, setQuery] = useState('');
+	const [query, setQuery] = useState("")
 
 	const onClick = () => {
 		if (!query) {
@@ -19,17 +23,20 @@ export default function MainPage() {
 		}
 
 		const filteredQuery = removeWhitespaces(query)
+
 		if (!filteredQuery.match(regex)) {
-			console.warn('query não passou no regex de verificação inicial!')
-			console.warn('Query filtrada', filteredQuery)
-			console.warn('Regex', regex)
+			console.warn("query não passou no regex de verificação inicial!")
+			console.warn("Query filtrada", filteredQuery)
+			console.warn("Regex", regex)
 			return
 		}
 
-		// TODO Organizar dados para ter espaço depois de vírgula
+		const fixedCommaWhitespaceText = parseCommaWhitespaces(filteredQuery)
 
-		setQuery(text);
-	};
+		const bodies = splitQueryIntoBodies(fixedCommaWhitespaceText)
+		console.log(bodies)
+		// setQuery(text)
+	}
 
 	return (
 		<div className="main">
@@ -41,6 +48,7 @@ export default function MainPage() {
 					placeholder="Insira!"
 					value={query}
 					onChange={(q) => setQuery(q.target.value)}
+					onKeyDown={(e) => e.keyCode === 13 && onClick()}
 				></input>
 				<button id="parse-query" onClick={onClick}>
 					Receba!
@@ -51,5 +59,5 @@ export default function MainPage() {
 				<div id="results-body">{query}</div>
 			</div>
 		</div>
-	);
+	)
 }
