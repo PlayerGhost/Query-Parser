@@ -16,7 +16,10 @@
 		"Usuario_idUsuario",
 		"SaldoInicial"
 	],
-	"TipoConta": ["idTipoConta", "Descrição"],
+	"TipoConta": [
+		"idTipoConta",
+		"Descrição"
+	],
 	"Movimentacao": [
 		"idMovimentação",
 		"DataMovimentacao",
@@ -26,6 +29,12 @@
 		"Contas_idContas",
 		"Valor"
 	],
-	"TipoMovimento": ["idTipoMovimento", "DescMovimentacao"],
-	"Categoria": ["idCategoria", "DescCategoria"]
+	"TipoMovimento": [
+		"idTipoMovimento",
+		"DescMovimentacao"
+	],
+	"Categoria": [
+		"idCategoria",
+		"DescCategoria"
+	]
 }

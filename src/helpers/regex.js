@@ -48,14 +48,14 @@ const query = `^${select}\\s?(( ${where})?|( ${join})+?( ${where})?)?\\s?;$`;
 export const regex = new RegExp(query);
 
 /*const regexArray = [
-    /,,+/i,                                          // Vírgulas seguidas
-    /,\s? FROM/i,                                    // vírgula e/ou espaço antes do from
-    /(\*\w|\w+\*)/i,                                 // Asterisco + Letra
-    /\s{2,}/i,                                       // Mais de 1 espaço seguido
-    /^(?!SELECT)/i,                                  // Sem SELECT
-    /[^;]$/i,                                        // Sem ponto e vírgula no final
-    /\w+\s AND (?!\w+)/i,                            // AND sem segundo operador
-    /WHERE \w\s(=|<>|<|>|<=|>=)\s?(?!\w+)/i,         // Operadores de comparação sem segundo valor
+	/,,+/i,                                          // Vírgulas seguidas
+	/,\s? FROM/i,                                    // vírgula e/ou espaço antes do from
+	/(\*\w|\w+\*)/i,                                 // Asterisco + Letra
+	/\s{2,}/i,                                       // Mais de 1 espaço seguido
+	/^(?!SELECT)/i,                                  // Sem SELECT
+	/[^;]$/i,                                        // Sem ponto e vírgula no final
+	/\w+\s AND (?!\w+)/i,                            // AND sem segundo operador
+	/WHERE \w\s(=|<>|<|>|<=|>=)\s?(?!\w+)/i,         // Operadores de comparação sem segundo valor
 ]*/
 
 examples.forEach((text) => {
