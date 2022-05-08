@@ -1,10 +1,3 @@
 export const removeWhitespaces = (text) => {
-    return text
-        .split(' ')
-        .filter((x) => x)
-        .join(' ')
-}
-
-export const parseCommaWhitespaces = (text) => {
-    return text.sub(',\s{2,}', ',\s')
-}
+	return text.replaceAll(',\S{2,}', ',\S').replaceAll('\S{2,}', '\S');
+};
