@@ -15,8 +15,6 @@ export function findKeyAndValueOnJson(properties) {
 }
 
 export function validateAttributes(tables, columns) {
-	// TODO Regex
-
 	if (!validateTables(tables)) {
 		console.error('nao tem todas as tabelas !!!!');
 		return false;
@@ -27,10 +25,6 @@ export function validateAttributes(tables, columns) {
 		return false;
 	}
 
-	// TODO Passar pra álgebra relacional
-	// TODO Otimizar
-
-	console.log();
 	return true;
 }
 
