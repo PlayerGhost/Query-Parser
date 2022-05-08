@@ -1,15 +1,12 @@
 import { useState } from 'react';
 
-import {
-	parseCommaWhitespaces,
-	removeWhitespaces
-} from '../helpers/text-parser';
-import { regex } from '../helpers/regex';
-import { splitQueryIntoBodies } from '../helpers/relationalAlgebra';
+import { removeWhitespaces } from '../helpers/text-parser';
 // import {
 // 	getAttributesFromTable,
 // 	validateAttributes
 // } from '../helpers/load-json';
+import { regex } from '../helpers/regex';
+import { splitQueryIntoBodies } from '../helpers/relationalAlgebra';
 
 import './MainPage.css';
 
@@ -23,7 +20,6 @@ export default function MainPage() {
 
 	const onClick = () => {
 		if (!query) {
-			console.warn('Sem query!');
 			showErrorMessage('Sem query!');
 			return;
 		}
@@ -36,19 +32,18 @@ export default function MainPage() {
 			return;
 		}
 
-		const fixedCommaWhitespaceText = parseCommaWhitespaces(filteredQuery);
-
-		const bodies = splitQueryIntoBodies(fixedCommaWhitespaceText);
-		console.log(bodies);
+		const bodies = splitQueryIntoBodies(filteredQuery);
 		if (!bodies) {
-			console.error('Não foi possível decompor a query!');
 			showErrorMessage('Não foi possível decompor a query!');
 		}
+
+		// TODO Verificar se as tabelas/atributos puxados do 'bodies' são válidos
 
 		setResult(JSON.stringify(bodies));
 	};
 
 	const showErrorMessage = (message) => {
+		console.error(message);
 		setError(message);
 		setTimeout(() => setError(''), ERROR_MESSAGE_TIMEOUT);
 	};
