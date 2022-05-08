@@ -2,7 +2,7 @@ class TreeOptimizer {
 	constructor(query) {
 		this.leaves = [];
 		this.leaves.push(new No('', '', query.FROM));
-		console.log(query.JOIN);
+		// console.log(query.JOIN);
 		for (let table of query.JOIN) {
 			let aux = new No('', '', table);
 
@@ -14,7 +14,7 @@ class TreeOptimizer {
 
 	printLeaves() {
 		for (let leave of this.leaves) {
-			console.log(leave, '-->');
+			// console.log(leave, '-->');
 		}
 	}
 }
@@ -44,73 +44,74 @@ let mySqlStringSplitted = teste.split(' ');
 
 let bodies = {};
 
-let relationalAlgebraStrings = {
-	SELECT: function (body) {
-		return `π ${body}`;
-	},
-	JOIN: function (body, fromBody) {
-		let relationalBodyString = `${fromBody} ⋈ ${body['ON'][0]} ${body['JOIN'][0]}`;
-		//delete body['ON'][0];
-		//delete body['JOIN'][0];
+// let relationalAlgebraStrings = {
+// 	SELECT: function (body) {
+// 		return `π ${body}`;
+// 	},
+// 	JOIN: function (body, fromBody) {
+// 		let relationalBodyString = `${fromBody} ⋈ ${body['ON'][0]} ${body['JOIN'][0]}`;
+// 		//delete body['ON'][0];
+// 		//delete body['JOIN'][0];
 
-		body['JOIN'].forEach((joinValue, index) => {
-			const onValue = body['ON'][index];
+// 		body['JOIN'].forEach((joinValue, index) => {
+// 			const onValue = body['ON'][index];
 
-			relationalBodyString = `${relationalBodyString} ⋈ ${onValue} ${joinValue}`;
-		});
+// 			relationalBodyString = `${relationalBodyString} ⋈ ${onValue} ${joinValue}`;
+// 		});
 
-		return `(${relationalBodyString})`;
-	},
-	WHERE: function (body) {
-		return `σ ${body} `;
-	}
-};
+// 		return `(${relationalBodyString})`;
+// 	},
+// 	WHERE: function (body) {
+// 		return `σ ${body} `;
+// 	}
+// };
 
-let auxBody = '';
-let keyWords = ['SELECT', 'FROM', 'JOIN', 'ON', 'WHERE'];
-let auxKeyWord = '';
+// let auxBody = '';
+// // let keyWords = ['SELECT', 'FROM', 'JOIN', 'ON', 'WHERE'];
+// let auxKeyWord = '';
 
-for (let word of mySqlStringSplitted) {
-	if (keyWords.includes(word)) {
-		let auxBodyArray =
-			bodies[auxKeyWord] == undefined ? [] : bodies[auxKeyWord];
-		auxBodyArray.push(auxBody.trim());
+// for (let word of mySqlStringSplitted) {
+// 	if (keyWords.includes(word)) {
+// 		let auxBodyArray =
+// 			bodies[auxKeyWord] == undefined ? [] : bodies[auxKeyWord];
+// 		auxBodyArray.push(auxBody.trim());
 
-		bodies[auxKeyWord] = auxBodyArray;
+// 		bodies[auxKeyWord] = auxBodyArray;
 
-		auxKeyWord = word;
-		auxBody = '';
-	} else {
-		auxBody += word + ' ';
-	}
-}
+// 		auxKeyWord = word;
+// 		auxBody = '';
+// 	} else {
+// 		auxBody += word + ' ';
+// 	}
+// }
 
-bodies[auxKeyWord] = auxBody.trim();
+// bodies[auxKeyWord] = auxBody.trim();
 
-Object.entries(bodies).forEach(([key, value]) => {
-	if (key != 'JOIN' && key != 'ON' && key != 'WHERE') {
-		bodies[key] = value[0];
-	}
-});
+// Object.entries(bodies).forEach(([key, value]) => {
+// 	if (key != 'JOIN' && key != 'ON' && key != 'WHERE') {
+// 		bodies[key] = value[0];
+// 	}
+// });
 
-delete bodies[''];
+// delete bodies[''];
 
 function printTest() {
-	console.log(bodies);
-	console.log();
-	console.log(relationalAlgebraStrings['SELECT'](bodies['SELECT']));
-	console.log(relationalAlgebraStrings['WHERE'](bodies['WHERE']));
+	// console.log(bodies);
+	// console.log();
+	// console.log(relationalAlgebraStrings['SELECT'](bodies['SELECT']));
+	// console.log(relationalAlgebraStrings['WHERE'](bodies['WHERE']));
 
 	let joinAux = { JOIN: bodies['JOIN'], ON: bodies['ON'] };
 
-	console.log(relationalAlgebraStrings['JOIN'](joinAux, bodies['FROM']));
+	// console.log(relationalAlgebraStrings['JOIN'](joinAux, bodies['FROM']));
 }
 
 printTest();
-console.log('----------------------------------------------------------------');
-console.log(bodies);
-const tree = new TreeOptimizer(bodies);
-console.log('leaves: ', tree.printLeaves());
+// console.log('----------------------------------------------------------------');
+// console.log(bodies);
+// const tree = new TreeOptimizer(bodies);
+// console.log('leaves: ', tree.printLeaves());
+const KEYWORDS = ['SELECT', 'FROM', 'JOIN', 'ON', 'WHERE'];
 
 export function splitQueryIntoBodies(query) {
 	let mySqlStringSplitted = query.split(' ');
@@ -118,28 +119,28 @@ export function splitQueryIntoBodies(query) {
 	let bodies = {};
 
 	let auxBody = '';
-	let keyWords = ['SELECT', 'FROM', 'JOIN', 'ON', 'WHERE'];
 	let auxKeyWord = '';
 
 	for (let word of mySqlStringSplitted) {
-		if (keyWords.includes(word)) {
-			let auxBodyArray =
-				bodies[auxKeyWord] == undefined ? [] : bodies[auxKeyWord];
+		const uppercaseWord = word.toUpperCase();
+
+		if (KEYWORDS.includes(uppercaseWord)) {
+			let auxBodyArray = bodies[auxKeyWord] || [];
 			auxBodyArray.push(auxBody.trim());
 
 			bodies[auxKeyWord] = auxBodyArray;
 
-			auxKeyWord = word;
+			auxKeyWord = uppercaseWord;
 			auxBody = '';
 		} else {
-			auxBody += word + ' ';
+			auxBody += uppercaseWord + ' ';
 		}
 	}
 
 	bodies[auxKeyWord] = auxBody.trim();
 
 	Object.entries(bodies).forEach(([key, value]) => {
-		if (key != 'JOIN' && key != 'ON' && key != 'WHERE') {
+		if (!['JOIN', 'ON', 'WHERE'].includes(key)) {
 			bodies[key] = value[0];
 		}
 	});
