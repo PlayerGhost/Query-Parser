@@ -2,7 +2,7 @@
 	display: grid;
 	grid-template-rows: 1fr 4fr;
 	justify-content: stretch;
-	gap: 15px;
+	gap: 25px;
 	padding: 25px;
 }
 
@@ -10,6 +10,29 @@
 	display: flex;
 	flex-direction: column;
 	gap: 10px;
+}
+
+.error-message {
+	color: rgb(194, 48, 48);
+	font-weight: 700;
+	animation: fade 300ms forwards 1;
+}
+
+.results {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	grid-template-rows: 0.1fr auto;
+}
+
+@keyframes fade {
+	0% {
+		opacity: 0;
+	}
+
+	100% {
+		opacity: 1;
+	}
 }
 
 #query {
@@ -30,4 +53,10 @@
 
 #parse-query:hover {
 	opacity: 0.8;
+}
+
+#results-body {
+	box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+	padding: 20px;
+	border-radius: 10px;
 }
