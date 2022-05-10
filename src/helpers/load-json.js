@@ -1,4 +1,4 @@
-import databaseTable from './db.json';
+import { databaseTable } from './db.js';
 
 export function findKeyAndValueOnJson(properties) {
 	const values = properties.split('.');
@@ -49,9 +49,9 @@ function validateColumns(tables, columns) {
 	const checkIfColumnExists = (y, x) => y && columnsToCheck.includes(x);
 	return columns.reduce(checkIfColumnExists, true);
 }
-//console.log(Object.keys(data).length);
+console.log(Object.keys(databaseTable).length);
 
-// findKeyAndValueOnJson('Usuario.nome');
-// const tables = ['usuario']
-// const columns = ['idusuario']
-// validateAttributes(tables, columns)
+findKeyAndValueOnJson('Usuario.Nome');
+const tables = ['Usuario']
+const columns = ['idUsuario']
+validateAttributes(tables, columns)

@@ -39,17 +39,13 @@ export const databaseTable = {
 	]
 }
 
-const OBJETO = {
-  SELECT: 'IDUSUARIO, NOME, DATANASCIMENTO, DESCRICAO, SALDOINICIAL, UF, DESCRIÇÃO',
-  FROM: 'USUARIO',
-  JOIN: [ 'CONTAS', 'TIPOCONTA' ],
-  ON: [
-    'USUARIO.IDUSUARIO = CONTAS.USUARIO_IDUSUARIO',
-    'TIPOCONTA.IDTIPOCONTA = CONTAS.TIPOCONTA_IDTIPOCONTA'
-  ],
-  WHERE: "SALDOINICIAL < 3000 AND UF = 'CE' AND DESCRIÇÃO <> 'CONTA CORRENTE'"
+export function getTableFromAtt(att){
+	for(let table in databaseTable){
+		let value = att.toUpperCase()
+		if(databaseTable[table].includes(value)){
+			return table
+		}
+	}
 }
 
-let atributos = OBJETO.SELECT.split(', ')
-atributos = atributos.map(a => a.includes('.') ? a.split('.')[1] : a) && databaseTable.CATEGORIA
-console.log(atributos)
+console.log(getTableFromAtt('idCategoria'))
