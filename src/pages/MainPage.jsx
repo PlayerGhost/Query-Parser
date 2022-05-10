@@ -1,10 +1,10 @@
 import { useState } from 'react';
 
+import {
+	// getAttributesFromTable,
+	validateAttributes
+} from '../helpers/load-json';
 import { removeWhitespaces } from '../helpers/text-parser';
-// import {
-// 	getAttributesFromTable,
-// 	validateAttributes
-// } from '../helpers/load-json';
 import { regex } from '../helpers/regex';
 import { splitQueryIntoBodies } from '../helpers/relationalAlgebra';
 
@@ -37,7 +37,9 @@ export default function MainPage() {
 			showErrorMessage('Não foi possível decompor a query!');
 		}
 
-		// TODO Verificar se as tabelas/atributos puxados do 'bodies' são válidos
+		if (!validateAttributes(bodies)) {
+			showErrorMessage("Algum atributo/tabela não existe no banco de dados!")
+		}
 
 		setResult(JSON.stringify(bodies));
 	};
