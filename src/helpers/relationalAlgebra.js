@@ -1,22 +1,53 @@
+import { databaseTable } from './db.js';
+
 class TreeOptimizer {
 	constructor(query) {
 		this.leaves = [];
-		this.leaves.push(new No('', '', query.FROM));
-		console.log(query);
-		console.log(query.JOIN);
+		this.leaves.push(new No(this.getTableSelections(query.FROM, query.WHERE), this.getTableAtributes(query.FROM, query.SELECT), query.FROM));
+
 		for (let table of query.JOIN) {
-			let aux = new No('', '', table);
+			let aux = new No(this.getTableSelections(table, query.WHERE), this.getTableAtributes(table, query.SELECT), table);
 
 			this.leaves.push(aux);
 		}
 	}
 
-	buildTree(query) {}
+	buildTree(query) { }
 
 	printLeaves() {
 		for (let leave of this.leaves) {
 			console.log(leave, '-->');
 		}
+	}
+
+	getTableAtributes(table, select) {
+		let atributes = []
+
+		for (let i of select.split(",")) {
+			i = i.trim()
+
+			if (this.isAtributeFromTable(table, i)) {
+				atributes.push(i)
+			}
+		}
+
+		return atributes
+	}
+
+	getTableSelections(table, WHERE) {
+		let selections = []
+
+		for (let i of WHERE.atributes) {
+			if (this.isAtributeFromTable(table, i)) {
+				selections.push(WHERE.expressions[WHERE.atributes.indexOf(i)])
+			}
+		}
+
+		return selections
+	}
+
+	isAtributeFromTable(table, atribute) {
+		return databaseTable[table].includes(atribute)
 	}
 }
 
@@ -117,16 +148,37 @@ export function splitQueryIntoBodies(query) {
 		let contentRight = {}
 
 
-        if (contents[0].trim().split(".").length < 2) {
-            contentLeft = { "table": " ", "atribute": contents[0].trim().split(".")[0] }
-            contentRight = { "table": " ", "atribute": contents[1].trim().split(".")[0] }
-        } else {
-            contentLeft = { "table": contents[0].trim().split(".")[0], "atribute": contents[0].trim().split(".")[1] }
-            contentRight = { "table": contents[1].trim().split(".")[0], "atribute": contents[1].trim().split(".")[1] }
-        }
+		if (contents[0].trim().split(".").length < 2) {
+			contentLeft = { "table": " ", "atribute": contents[0].trim().split(".")[0] }
+			contentRight = { "table": " ", "atribute": contents[1].trim().split(".")[0] }
+		} else {
+			contentLeft = { "table": contents[0].trim().split(".")[0], "atribute": contents[0].trim().split(".")[1] }
+			contentRight = { "table": contents[1].trim().split(".")[0], "atribute": contents[1].trim().split(".")[1] }
+		}
 
-        bodies['ON'][key] = { "left": contentLeft, "right": contentRight }
-    });
+		bodies['ON'][key] = { "left": contentLeft, "right": contentRight }
+	});
+
+	let operatorsPriority = ["=", "<>", "<", ">", "<=", ">="]
+	let expressions = bodies['WHERE'].split("AND")
+	let expressionsPriority = []
+	let expressionsAtributesPriority = []
+
+
+	for (let i of operatorsPriority) {
+		for (let j of expressions) {
+			if (j.includes(i)) {
+				expressionsPriority.push(j.trim())
+
+				let atribute = j.split(/=|<|>|<>|<=|>=/)
+
+				expressionsAtributesPriority.push(atribute[0].trim())
+				expressions.splice(expressions.indexOf(j), 1)
+			}
+		}
+	}
+
+	bodies['WHERE'] = { "expression": bodies['WHERE'], "expressions": expressionsPriority, "atributes": expressionsAtributesPriority}
 
 	delete bodies[''];
 	return bodies;
