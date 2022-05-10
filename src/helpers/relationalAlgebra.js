@@ -39,15 +39,24 @@ function splitQueryIntoBodies(query) {
 		if (!['JOIN', 'ON', 'WHERE'].includes(key)) {
 			bodies[key] = value[0];
 		}
-	});
+    });
+
+    Object.entries(bodies['ON']).forEach(([key, value]) => {
+		contents = value.split("=")
+        
+        contentLeft = { "table": contents[0].trim().split(".")[0], "atribute": contents[0].trim().split(".")[1] }
+        contentRight = { "table": contents[1].trim().split(".")[0], "atribute": contents[1].trim().split(".")[1]}
+
+        bodies['ON'][key] = { "left": contentLeft, "right": contentRight }
+    });
 
 	delete bodies[''];
 	return bodies;
 }
 
-function makeTree(query){
-    const tree = new TreeOptimizer(query)
-    tree.printLeaves()
+function makeTree(query) {
+	const tree = new TreeOptimizer(query)
+	tree.printLeaves()
 }
 
 const value = splitQueryIntoBodies(teste)
