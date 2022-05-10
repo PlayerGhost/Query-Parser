@@ -2,12 +2,13 @@ class TreeOptimizer {
 	constructor(query) {
 		this.leaves = [];
 		this.leaves.push(new No('', '', query.FROM));
+		console.log(query);
 		console.log(query.JOIN);
-		/*for (let table of query.JOIN) {
+		for (let table of query.JOIN) {
 			let aux = new No('', '', table);
 
 			this.leaves.push(aux);
-		}*/
+		}
 	}
 
 	buildTree(query) {}
@@ -37,13 +38,6 @@ class Aresta {
 	}
 }
 
-const teste =
-	"SELECT IDUSUARIO, NOME, DATANASCIMENTO, DESCRICAO, SALDOINICIAL, UF, DESCRIÇÃO FROM USUARIO JOIN CONTAS ON USUARIO.IDUSUARIO = CONTAS.USUARIO_IDUSUARIO JOIN TIPOCONTA ON TIPOCONTA.IDTIPOCONTA = CONTAS.TIPOCONTA_IDTIPOCONTA WHERE SALDOINICIAL < 3000 AND UF = 'CE' AND DESCRIÇÃO <> 'CONTA CORRENTE'";
-
-let mySqlStringSplitted = teste.split(' ');
-
-let bodies = {};
-
 let relationalAlgebraStrings = {
 	SELECT: function (body) {
 		return `π ${body}`;
@@ -66,10 +60,6 @@ let relationalAlgebraStrings = {
 	}
 };
 
-let auxBody = '';
-let keyWords = ['SELECT', 'FROM', 'JOIN', 'ON', 'WHERE'];
-let auxKeyWord = '';
-
 /*function printTest() {
 	console.log(bodies);
 	console.log();
@@ -82,9 +72,11 @@ let auxKeyWord = '';
 }*/
 
 //printTest();
+const teste = "SELECT IDUSUARIO, NOME, DATANASCIMENTO, DESCRICAO, SALDOINICIAL, UF, DESCRIÇÃO FROM USUARIO JOIN CONTAS ON USUARIO.IDUSUARIO = CONTAS.USUARIO_IDUSUARIO JOIN TIPOCONTA ON TIPOCONTA.IDTIPOCONTA = CONTAS.TIPOCONTA_IDTIPOCONTA WHERE SALDOINICIAL < 3000 AND UF = 'CE' AND DESCRIÇÃO <> 'CONTA CORRENTE'";
+
 console.log('----------------------------------------------------------------');
-console.log(bodies);
-const tree = new TreeOptimizer(bodies);
+console.log(splitQueryIntoBodies(teste));
+const tree = new TreeOptimizer(splitQueryIntoBodies(teste));
 console.log('leaves: ', tree.printLeaves());
 
 export function splitQueryIntoBodies(query) {
@@ -120,7 +112,10 @@ export function splitQueryIntoBodies(query) {
 	});
 
 	Object.entries(bodies['ON']).forEach(([key, value]) => {
-        contents = value.split("=")
+		let contents = value.split("=")
+		let contentLeft = {}
+		let contentRight = {}
+
 
         if (contents[0].trim().split(".").length < 2) {
             contentLeft = { "table": " ", "atribute": contents[0].trim().split(".")[0] }
