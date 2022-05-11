@@ -3,15 +3,15 @@ import { databaseTable } from './db.js';
 class TreeOptimizer {
 	constructor(query) {
 		this.leaves = [];
-		this.leaves.push(
+		/*this.leaves.push(
 			new No(
-				this.getTableSelections(query.FROM, query.WHERE),
-				this.getTableAtributes(query.FROM, query.SELECT),
+				this.getTableSelections(query.tables[0], query.WHERE),
+				this.getTableAtributes(query.tables[0], query.SELECT),
 				query.FROM
 			)
-		);
+		);*/
 
-		for (let table of query.JOIN) {
+		for (let table of query.tables) {
 			let aux = new No(
 				this.getTableSelections(table, query.WHERE),
 				this.getTableAtributes(table, query.SELECT),
@@ -30,12 +30,12 @@ class TreeOptimizer {
 		if (currentLeaves.length > 1) {
 			const noEsquerdo = currentLeaves[0];
 			const noDireito = currentLeaves[1];
-					console.log('esq', noEsquerdo, 'esq')
-					console.log('dir', noDireito, 'dir')
+			console.log('esq', noEsquerdo, 'esq')
+			console.log('dir', noDireito, 'dir')
 			const father = new No(
 				'',
 				noEsquerdo.aresta.projecao.concat(noDireito.aresta.projecao),
-				noEsquerdo.name + ' |x| ' + noDireito.name
+				`${noEsquerdo.name + ' |x| <cond> (' + noDireito.name})`
 			);
 			noEsquerdo.setPai(father)
 			noDireito.setPai(father)
@@ -43,31 +43,9 @@ class TreeOptimizer {
 		}
 
 		return currentLeaves[0]
-		// let fathers = [];
-		// if (currentLeaves.length > 1) {
-		// 	for (let i = 0; i < currentLeaves.length - 1; i+=1) {
-		// 		const noEsquerdo = currentLeaves[i];
-		// 		const noDireito = currentLeaves[i + 1];
-		// 		console.log('esq', noEsquerdo, 'esq')
-		// 		console.log('dir', noDireito, 'dir')
-		// 		const father = new No(
-		// 			'',
-		// 			noEsquerdo.aresta.projecao.concat(noDireito.aresta.projecao),
-		// 			noEsquerdo.name + ' |x| ' + noDireito.name
-		// 		);
-		// 		noEsquerdo.setPai(father);
-		// 		noDireito.setPai(father);
-		// 		fathers.push(father);
-		// 		console.log('loop----------------------------')
-		// 	}
-		// 	console.log('----------------------------')
-		// 	this.buildJunction(fathers);
-		// } else {
-		// 	return currentLeaves[0];
-		// }
 	}
 
-	buildTree(query) {}
+	buildTree(query) { }
 
 	printLeaves() {
 		for (let leave of this.leaves) {
@@ -186,16 +164,18 @@ PNUMBER = PNO AND ESSN = SSN AND
 BDATE > ‘1957-12-31’
 */
 //printTest();
-// const teste =
-	// "SELECT IDUSUARIO, NOME, DATANASCIMENTO, DESCRICAO, SALDOINICIAL, UF, DESCRIÇÃO FROM USUARIO JOIN CONTAS ON USUARIO.IDUSUARIO = CONTAS.USUARIO_IDUSUARIO JOIN TIPOCONTA ON TIPOCONTA.IDTIPOCONTA = CONTAS.TIPOCONTA_IDTIPOCONTA WHERE SALDOINICIAL < 3000 AND UF = 'CE' AND DESCRIÇÃO <> 'CONTA CORRENTE'";
-// const teste =
-// 	"SELECT NOME, DATANASCIMENTO, DESCRICAO, SALDOINICIALFROM USUARIO JOIN CONTAS ON USUARIO.IDUSUARIO = CONTAS.USUARIO_IDUSUARIO WHERE SALDOINICIAL >=235 AND UF ='CE' AND CEP <> '62930000'";
 const teste =
-	"SELECT LNAME	FROM EMPLOYEE, WORKS_ON, PROJECT WHERE PNAME = ‘AQUARIUS’ AND PNUMBER = PNO AND ESSN = SSN AND BDATE > ‘1957-12-31’";
+	"SELECT IDUSUARIO, NOME, DATANASCIMENTO, DESCRICAO, SALDOINICIAL, UF, DESCRIÇÃO FROM USUARIO JOIN CONTAS ON USUARIO.IDUSUARIO = CONTAS.USUARIO_IDUSUARIO JOIN TIPOCONTA ON TIPOCONTA.IDTIPOCONTA = CONTAS.TIPOCONTA_IDTIPOCONTA WHERE SALDOINICIAL < 3000 AND UF <> 'CE' AND DESCRIÇÃO = 'CONTA CORRENTE'";
+// const teste =
+// 	"SELECT NOME, DATANASCIMENTO, DESCRICAO, SALDOINICIAL FROM USUARIO JOIN CONTAS ON USUARIO.IDUSUARIO = CONTAS.USUARIO_IDUSUARIO WHERE SALDOINICIAL >= 235 AND UF = 'CE' AND CEP <> '62930000'";
+// const teste =
+// 	"SELECT LNAME	FROM EMPLOYEE, WORKS_ON, PROJECT WHERE PNAME = ‘AQUARIUS’ AND PNUMBER = PNO AND ESSN = SSN AND BDATE > ‘1957-12-31’";
 
 // console.log('----------------------------------------------------------------');
-// console.log(splitQueryIntoBodies(teste));
-const tree = new TreeOptimizer(splitQueryIntoBodies(teste));
+const queryBodies = splitQueryIntoBodies(teste)
+console.log(queryBodies);
+// const tree = new TreeOptimizer(splitQueryIntoBodies(teste));
+
 // console.log('leaves: ', this.leaves);
 
 export function splitQueryIntoBodies(query) {
@@ -254,27 +234,43 @@ export function splitQueryIntoBodies(query) {
 
 	let operatorsPriority = ['=', '<=', '>=', '<', '>', '<>'];
 	let expressions = bodies['WHERE'].split('AND');
-	let expressionsPriority = [];
-	let expressionsAtributesPriority = [];
+	let expressionsPriority = new Set()
+	let expressionsAtributesPriority = new Set()
+	let tables = [bodies["FROM"]].concat(bodies["JOIN"])
+	let tablesPriority = []
 
 	for (let i of operatorsPriority) {
 		for (let j of expressions) {
+			console.log('sera q tem ', i, ' no ', j, '?', j.includes(i))
 			if (j.includes(i)) {
-				expressionsPriority.push(j.trim());
+				expressionsPriority.add(j.trim());
 
 				let atribute = j.split(/(=|<|>|<>|<=|>=)/);
 
-				expressionsAtributesPriority.push(atribute[0].trim());
-				expressions.splice(expressions.indexOf(j), 1);
+				expressionsAtributesPriority.add(atribute[0].trim());
+				//expressions.splice(expressions.indexOf(j), 1);
 			}
 		}
 	}
+
+	expressionsAtributesPriority = new Array(...expressionsAtributesPriority)
+	expressionsPriority = new Array(...expressionsPriority)
 
 	bodies['WHERE'] = {
 		expression: bodies['WHERE'],
 		expressions: expressionsPriority,
 		atributes: expressionsAtributesPriority
 	};
+
+	bodies['WHERE']["atributes"].forEach((value, index) => {
+		for (let j of tables) {
+			if (databaseTable[j].includes(value)) {
+				tablesPriority.push(j)
+			}
+		}
+	})
+
+	bodies["tables"] = tablesPriority
 
 	delete bodies[''];
 	return bodies;
