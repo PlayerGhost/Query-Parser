@@ -2,6 +2,7 @@ import { databaseTable } from './db.js';
 
 class TreeOptimizer {
 	constructor(query) {
+		this.query = query
 		this.leaves = [];
 		/*this.leaves.push(
 			new No(
@@ -32,14 +33,27 @@ class TreeOptimizer {
 			const noDireito = currentLeaves[1];
 			console.log('esq', noEsquerdo, 'esq')
 			console.log('dir', noDireito, 'dir')
-			const father = new No(
-				'',
-				noEsquerdo.aresta.projecao.concat(noDireito.aresta.projecao),
-				`${noEsquerdo.name + ' |x| <cond> (' + noDireito.name})`
-			);
-			noEsquerdo.setPai(father)
-			noDireito.setPai(father)
-			return this.buildJunction([father, ...currentLeaves.slice(2)]);
+			// const father = new No(
+			// 	'',
+			// 	noEsquerdo.aresta.projecao.concat(noDireito.aresta.projecao),
+			// 	`${noEsquerdo.name + ' |x| <cond> (' + noDireito.name})`
+			// );
+
+			for (let onStructure of this.query.ON) {
+				if (onStructure.left.table == noEsquerdo.name && onStructure.right.table == noDireito.name) {
+					const father = new No(
+						'',
+						noEsquerdo.aresta.projecao.concat(noDireito.aresta.projecao),
+						`|x|${onStructure.expression}`
+					);
+
+					noEsquerdo.setPai(father)
+					noDireito.setPai(father)
+					father.setEsquerdo(noEsquerdo)
+					father.setDireito(noDireito)
+					return this.buildJunction([father, ...currentLeaves.slice(2)]);
+				}
+			}
 		}
 
 		return currentLeaves[0]
@@ -88,10 +102,24 @@ class No {
 	constructor(selecao, projecao, name) {
 		this.aresta = new Aresta(selecao, projecao);
 		this.name = name;
+		this.pai = null;
+		this.esquerdo = null
+		this.direito = null
 	}
 
 	setPai(no) {
 		this.pai = no;
+	}
+
+	setEsquerdo(no) {
+		if (no == this) return
+
+		this.esquerdo = no
+	}
+
+	setDireito(no) {
+		if (no == this) return
+		this.direito = no
 	}
 }
 
@@ -174,9 +202,8 @@ const teste =
 // console.log('----------------------------------------------------------------');
 const queryBodies = splitQueryIntoBodies(teste)
 console.log(queryBodies);
-// const tree = new TreeOptimizer(splitQueryIntoBodies(teste));
-
-// console.log('leaves: ', this.leaves);
+console.log();
+const tree = new TreeOptimizer(splitQueryIntoBodies(teste));
 
 export function splitQueryIntoBodies(query) {
 	let mySqlStringSplitted = query.split(' ');
@@ -229,7 +256,7 @@ export function splitQueryIntoBodies(query) {
 			};
 		}
 
-		bodies['ON'][key] = { left: contentLeft, right: contentRight };
+		bodies['ON'][key] = { left: contentLeft, right: contentRight, expression: value };
 	});
 
 	let operatorsPriority = ['=', '<=', '>=', '<', '>', '<>'];
@@ -241,7 +268,7 @@ export function splitQueryIntoBodies(query) {
 
 	for (let i of operatorsPriority) {
 		for (let j of expressions) {
-			console.log('sera q tem ', i, ' no ', j, '?', j.includes(i))
+			// console.log('sera q tem ', i, ' no ', j, '?', j.includes(i))
 			if (j.includes(i)) {
 				expressionsPriority.add(j.trim());
 
