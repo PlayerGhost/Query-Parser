@@ -39,6 +39,8 @@ class TreeOptimizer {
 			);
 			noEsquerdo.setPai(father)
 			noDireito.setPai(father)
+			father.setEsquerdo(noEsquerdo)
+			father.setDireito(noDireito)
 			return this.buildJunction([father, ...currentLeaves.slice(2)]);
 		}
 
@@ -88,10 +90,24 @@ class No {
 	constructor(selecao, projecao, name) {
 		this.aresta = new Aresta(selecao, projecao);
 		this.name = name;
+		this.pai = null;
+		this.esquerdo = null
+		this.direito = null
 	}
 
 	setPai(no) {
 		this.pai = no;
+	}
+
+	setEsquerdo(no) {
+		if (no == this) return
+		
+		this.esquerdo = no
+	}
+
+	setDireito(no) {
+		if(no == this) return
+		this.direito = no
 	}
 }
 
@@ -174,9 +190,8 @@ const teste =
 // console.log('----------------------------------------------------------------');
 const queryBodies = splitQueryIntoBodies(teste)
 console.log(queryBodies);
-// const tree = new TreeOptimizer(splitQueryIntoBodies(teste));
-
-// console.log('leaves: ', this.leaves);
+console.log();
+const tree = new TreeOptimizer(splitQueryIntoBodies(teste));
 
 export function splitQueryIntoBodies(query) {
 	let mySqlStringSplitted = query.split(' ');
