@@ -49,9 +49,9 @@ function validateColumns(tables, columns) {
 	const checkIfColumnExists = (y, x) => y && columnsToCheck.includes(x);
 	return columns.reduce(checkIfColumnExists, true);
 }
-console.log(Object.keys(databaseTable).length);
+/*console.log(Object.keys(databaseTable).length);
 
 findKeyAndValueOnJson('Usuario.Nome');
 const tables = ['Usuario']
 const columns = ['idUsuario']
-validateAttributes(tables, columns)
+validateAttributes(tables, columns)*/
