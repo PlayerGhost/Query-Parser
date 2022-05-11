@@ -8,7 +8,7 @@
 
 .user-input {
 	display: flex;
-	flex-direction: column;
+	flex-direction: row;
 	gap: 10px;
 }
 
@@ -36,11 +36,15 @@
 }
 
 #query {
+	width: 90%;
+	height: 30%;
 	padding: 10px 15px;
 	border-radius: 10px;
 }
 
 #parse-query {
+	width: 10%;
+	height: 30%;
 	padding: 10px;
 	font-weight: 700;
 	border-radius: 10px;
@@ -55,8 +59,16 @@
 	opacity: 0.8;
 }
 
+#parse-query:active {
+	background-color: blue;
+}
+
 #results-body {
 	box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
 	padding: 20px;
 	border-radius: 10px;
+}
+
+h2{
+	text-decoration: underline;
 }

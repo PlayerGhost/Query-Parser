@@ -52,23 +52,23 @@ export default function MainPage() {
 
 	return (
 		<div className="main">
+			<h2>Processador de consultas</h2>
 			<div className="user-input">
-				<h2>Processador de consultas</h2>
 				<input
 					type="text"
 					id="query"
-					placeholder="Insira!"
+					placeholder="Insira sua consulta SQL."
 					value={query}
 					onChange={(q) => setQuery(q.target.value)}
 					onKeyDown={(e) => e.keyCode === ENTER_KEYCODE && onClick()}
 				></input>
 				<button id="parse-query" onClick={onClick}>
-					Receba!
+					Executar
 				</button>
 			</div>
-			{Boolean(error) && <h3 className="error-message">Erro: {error}</h3>}
 			<div className="results">
 				<h2>Resultado da consulta</h2>
+				{Boolean(error) && <h3 className="error-message">Erro: {error}</h3>}
 				{Boolean(result) && <div id="results-body">{result}</div>}
 			</div>
 		</div>
