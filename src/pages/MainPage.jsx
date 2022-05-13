@@ -71,7 +71,7 @@ export default function MainPage() {
 					<h2>Resultado da consulta</h2>
 					{Boolean(error) && <h3 className="error-message">Erro: {error}</h3>}
 					{Boolean(result) && <div id="results-body">{result}</div>}
-					{Boolean(result) && <div id="results-body">{result}</div>}
+					{Boolean(result) && <div id="graph"></div>}
 				</div>
 			</section>
 		</div>

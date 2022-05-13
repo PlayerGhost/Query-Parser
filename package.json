@@ -16,7 +16,8 @@
   "homepage": "https://github.com/PlayerGhost/Query-Parser#readme",
   "dependencies": {
     "react": "^18.0.0",
-    "react-dom": "^18.0.0"
+    "react-dom": "^18.0.0",
+    "zingchart": "^2.9.9"
   },
   "devDependencies": {
     "@jest/globals": "^28.1.0",

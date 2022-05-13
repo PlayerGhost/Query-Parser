@@ -1,6 +1,4 @@
 import { databaseTable } from './db.js';
-//import  Springy from '../util/springy/springy.js';
-//import  Springyui   from '../util/springy/springyui.js';
 
 class TreeOptimizer {
 	constructor(query) {
@@ -197,19 +195,28 @@ const teste =
 // 	"SELECT LNAME	FROM EMPLOYEE, WORKS_ON, PROJECT WHERE PNAME = ‘AQUARIUS’ AND PNUMBER = PNO AND ESSN = SSN AND BDATE > ‘1957-12-31’";
 
 // console.log('----------------------------------------------------------------');
-const queryBodies = splitQueryIntoBodies(teste)
 //console.log(queryBodies);
-console.log();
-const tree = new TreeOptimizer(splitQueryIntoBodies(teste))
-let treeStructure = tree.buildJunction(tree.leaves)
-//console.log("leavessss ----", this.leaves)
-console.log('DEBUG')
-console.log("final --->", treeStructure)
-console.log()
 
-//let graph = new Springy.Graph();
+export function generateGraphToPlot() {
+	const queryBodies = splitQueryIntoBodies(teste)
+	const tree = new TreeOptimizer(splitQueryIntoBodies(teste))
+	let treeStructure = tree.buildJunction(tree.leaves)
 
-console.log()
+	let graph = []
+	/*{
+		id: 'theworld',
+		parent: '',
+		name: 'The World',
+	}*/
+
+	console.log('DEBUG')
+	console.log("final --->", treeStructure)
+	console.log()
+
+	return graph
+}
+
+generateGraphToPlot()
 
 export function splitQueryIntoBodies(query) {
 	let mySqlStringSplitted = query.split(' ');
