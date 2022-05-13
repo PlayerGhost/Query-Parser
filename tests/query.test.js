@@ -47,3 +47,39 @@ test('FAIL - Missing semicolon', () => {
 	const result = new RegExp(regex).test(query);
 	expect(result).toBe(false);
 });
+
+test('PASS - Equal operator =', () => {
+	const query = `SELECT * FROM USUARIO WHERE ID = 1;`;
+	const result = regex.test(query);
+	expect(result).toBe(true);
+});
+
+test('PASS - Difference operator <>', () => {
+	const query = `SELECT * FROM USUARIO WHERE id <> 1;`;
+	const result = new RegExp(regex).test(query);
+	expect(result).toBe(true);
+});
+
+test('PASS - Greater than operator >', () => {
+	const query = `SELECT * FROM USUARIO WHERE id > 1;`;
+	const result = new RegExp(regex).test(query);
+	expect(result).toBe(true);
+});
+
+test('PASS - Lesser than operator <', () => {
+	const query = `SELECT * FROM USUARIO WHERE id < 1;`;
+	const result = new RegExp(regex).test(query);
+	expect(result).toBe(true);
+});
+
+test('PASS - Greater or equal than operator >=', () => {
+	const query = `SELECT * FROM USUARIO WHERE id >= 1;`;
+	const result = new RegExp(regex).test(query);
+	expect(result).toBe(true);
+});
+
+test('PASS - Lesser or equal than operator <=', () => {
+	const query = `SELECT * FROM USUARIO WHERE id <= 1;`;
+	const result = new RegExp(regex).test(query);
+	expect(result).toBe(true);
+});

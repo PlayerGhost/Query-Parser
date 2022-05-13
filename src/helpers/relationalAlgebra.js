@@ -1,81 +1,85 @@
 import { databaseTable } from './db.js';
-//import  Springy from '../util/springy/springy.js';
-//import  Springyui   from '../util/springy/springyui.js';
 
-class TreeOptimizer {
+export class TreeOptimizer {
 	constructor(query) {
-		this.query = query
+		this.query = query;
 		this.leaves = [];
-        this.order = 0;
+		this.order = 0;
+
 		for (let table of query.tables) {
-            let selections = this.getTableSelections(table, query.WHERE)
-            let aux = new No(table)
-            this.leaves.push(aux);
-            for(let selec of selections){
-                aux.setPai(new No("σ"+selec))
-                aux = aux.getPai()
-            }
-            aux.setPai(new No("π"+this.getTableAtributes(table, query.SELECT)))
+			let selections = this.getTableSelections(table, query.WHERE);
+			let aux = new No(table);
+			this.leaves.push(aux);
+			for (let selec of selections) {
+				aux.setPai(new No('σ' + selec));
+				aux = aux.getPai();
+			}
+			aux.setPai(new No('π' + this.getTableAtributes(table, query.SELECT)));
 		}
-        
-        let comparator = []
-        for(let i=0; i<this.leaves.length; i++){
-            comparator.push(this.leaves[i].getPai())
-        }
-        console.log(JSON.stringify(comparator))
+
+		let comparator = [];
+		for (let i = 0; i < this.leaves.length; i++) {
+			comparator.push(this.leaves[i].getPai());
+		}
+		console.log(JSON.stringify(comparator));
 		console.log(this.startBuildJunction(comparator));
-        // console.log(JSON.stringify(this.leaves))
+		// console.log(JSON.stringify(this.leaves))
 	}
 
 	buildJunction(comparator, index, pairs) {
-        if(!comparator[index]){
-            console.log(JSON.stringify(this.leaves))   
-        }
-        if(comparator.length == 1){
-            return comparator[0]
-        }
-        if(comparator[index].getPai()){
-            comparator[index] = comparator[index].getPai()
-            comparator[index].setOrder(++this.order)
-            return this.buildJunction(comparator, index, pairs)
-        }else{
-            let prox = index == comparator.length-1 ? index-1 : index+1
-            if(pairs.length == 2){
-                console.log('entrou')
-                console.log(comparator)
-                const father = new No(comparator[index].name+","+comparator[prox].name)
-                comparator[prox].setPai(father)
-                comparator[index].setPai(father)
-                comparator[Math.min(prox, index)] = father
-                comparator.splice(Math.max(prox, index), 1)
-                pairs = []
-                pairs.push(father)
-                comparator[Math.min(prox, index)].setOrder(++this.order)
-                return this.buildJunction(comparator, prox, pairs)
-            }else{
-                pairs.push(comparator[index])
-                comparator[prox].setOrder(++this.order)
-                return this.buildJunction(comparator, prox, pairs)
-            }
-        }
+		if (!comparator[index]) {
+			console.log(JSON.stringify(this.leaves));
+		}
+
+		if (comparator.length == 1) {
+			return comparator[0];
+		}
+
+		// TODO Index chega nulo neste if e quebra a aplicação
+		if (comparator[index].getPai()) {
+			comparator[index] = comparator[index].getPai();
+			comparator[index].setOrder(++this.order);
+			return this.buildJunction(comparator, index, pairs);
+		} else {
+			let prox = index == comparator.length - 1 ? index - 1 : index + 1;
+			if (pairs.length == 2) {
+				console.log('entrou');
+				console.log(comparator);
+				const father = new No(
+					comparator[index].name + ',' + comparator[prox].name
+				);
+				comparator[prox].setPai(father);
+				comparator[index].setPai(father);
+				comparator[Math.min(prox, index)] = father;
+				comparator.splice(Math.max(prox, index), 1);
+				pairs = [];
+				pairs.push(father);
+				comparator[Math.min(prox, index)].setOrder(++this.order);
+				return this.buildJunction(comparator, prox, pairs);
+			} else {
+				pairs.push(comparator[index]);
+				comparator[prox].setOrder(++this.order);
+				return this.buildJunction(comparator, prox, pairs);
+			}
+		}
 	}
 
-    startBuildJunction(comparator){
-        const index = this.getIndexBiggerPriority(comparator)
-        return this.buildJunction(comparator, index, [])
-    }
+	startBuildJunction(comparator) {
+		const index = this.getIndexBiggerPriority(comparator);
+		return this.buildJunction(comparator, index, []);
+	}
 
-    getIndexBiggerPriority(array){
-        let priorityIndex = 10;
-        let priorityValue = 10;
-        for(let i=0; i<array.length; i++){
-            if(array[i].priority < priorityValue){
-                priorityIndex = i
-                priorityValue = array[i].priority
-            }
-        }
-        return priorityIndex
-    }
+	getIndexBiggerPriority(array) {
+		let priorityIndex = 10;
+		let priorityValue = 10;
+		for (let i = 0; i < array.length; i++) {
+			if (array[i].priority < priorityValue) {
+				priorityIndex = i;
+				priorityValue = array[i].priority;
+			}
+		}
+		return priorityIndex;
+	}
 
 	getTableAtributes(table, select) {
 		let atributes = [];
@@ -107,46 +111,50 @@ class TreeOptimizer {
 		return databaseTable[table].includes(atribute);
 	}
 }
-let priorityRules = ['=', '<=', '>=', '<', '>', '<>']
+let priorityRules = ['=', '<=', '>=', '<', '>', '<>'];
 class No {
 	constructor(name) {
 		this.name = name;
-		this.pai = null
-		this.esquerdo = null
-		this.direito = null
-        if(name.startsWith("σ")){
-            this.priority = priorityRules.indexOf(name.split(' ')[1])
-        }
+		this.pai = null;
+		this.esquerdo = null;
+		this.direito = null;
+		if (name.startsWith('σ')) {
+			this.priority = priorityRules.indexOf(name.split(' ')[1]);
+			return;
+		}
+
+		this.priority = -1;
+		this.order = -1;
 	}
 
-    setPriority(priority){
-        this.priority = priority
-    }
+	setPriority(priority) {
+		this.priority = priority;
+	}
 
-    getPriority(){
-        return this.priority
-    }
+	getPriority() {
+		return this.priority;
+	}
 
-    setOrder(order){
-        this.order = order
-    }
+	setOrder(order) {
+		this.order = order;
+	}
 
-    getPai(){
-        return this.pai
-    }
+	getPai() {
+		return this.pai;
+	}
 
 	setPai(no) {
 		this.pai = no;
 	}
 
 	setEsquerdo(no) {
-		if (no == this) return
-		this.esquerdo = no
+		if (no == this) return;
+		this.esquerdo = no;
 	}
 
 	setDireito(no) {
-		if (no == this) return
-		this.direito = no
+		if (no == this) return;
+		this.direito = no;
 	}
 }
 
@@ -158,19 +166,19 @@ const teste =
 // 	"SELECT LNAME FROM EMPLOYEE, WORKS_ON, PROJECT WHERE PNAME = ‘AQUARIUS’ AND PNUMBER = PNO AND ESSN = SSN AND BDATE > ‘1957-12-31’";
 
 // console.log('----------------------------------------------------------------');
-const queryBodies = splitQueryIntoBodies(teste)
+const queryBodies = splitQueryIntoBodies(teste);
 //console.log(queryBodies);
 console.log();
-const tree = new TreeOptimizer(splitQueryIntoBodies(teste))
-let treeStructure = tree.buildJunction(tree.leaves)
+const tree = new TreeOptimizer(splitQueryIntoBodies(teste));
+let treeStructure = tree.buildJunction(tree.leaves);
 //console.log("leavessss ----", this.leaves)
-console.log('DEBUG')
-console.log("final --->", treeStructure)
-console.log()
+console.log('DEBUG');
+console.log('final --->', treeStructure);
+console.log();
 
 //let graph = new Springy.Graph();
 
-console.log()
+console.log();
 
 export function splitQueryIntoBodies(query) {
 	let mySqlStringSplitted = query.split(' ');
@@ -223,15 +231,19 @@ export function splitQueryIntoBodies(query) {
 			};
 		}
 
-		bodies['ON'][key] = { left: contentLeft, right: contentRight, expression: value };
+		bodies['ON'][key] = {
+			left: contentLeft,
+			right: contentRight,
+			expression: value
+		};
 	});
 
 	let operatorsPriority = ['=', '<=', '>=', '<', '>', '<>'];
 	let expressions = bodies['WHERE'].split('AND');
-	let expressionsPriority = new Set()
-	let expressionsAtributesPriority = new Set()
-	let tables = [bodies["FROM"]].concat(bodies["JOIN"])
-	let tablesPriority = []
+	let expressionsPriority = new Set();
+	let expressionsAtributesPriority = new Set();
+	let tables = [bodies['FROM']].concat(bodies['JOIN']);
+	let tablesPriority = [];
 
 	for (let i of operatorsPriority) {
 		for (let j of expressions) {
@@ -247,8 +259,8 @@ export function splitQueryIntoBodies(query) {
 		}
 	}
 
-	expressionsAtributesPriority = new Array(...expressionsAtributesPriority)
-	expressionsPriority = new Array(...expressionsPriority)
+	expressionsAtributesPriority = new Array(...expressionsAtributesPriority);
+	expressionsPriority = new Array(...expressionsPriority);
 
 	bodies['WHERE'] = {
 		expression: bodies['WHERE'],
@@ -256,15 +268,15 @@ export function splitQueryIntoBodies(query) {
 		atributes: expressionsAtributesPriority
 	};
 
-	bodies['WHERE']["atributes"].forEach((value, index) => {
+	bodies['WHERE']['atributes'].forEach((value, index) => {
 		for (let j of tables) {
 			if (databaseTable[j].includes(value)) {
-				tablesPriority.push(j)
+				tablesPriority.push(j);
 			}
 		}
-	})
+	});
 
-	bodies["tables"] = tablesPriority
+	bodies['tables'] = tablesPriority;
 
 	delete bodies[''];
 	return bodies;

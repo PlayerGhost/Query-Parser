@@ -9,7 +9,6 @@
 // 	' FROM USUARIO;',
 // 	'* FROM USUARIO;',
 // 	'* FROM USUARIO;',
-// 	'SELECT * FROM USUARIO WHERE id = 1;',
 // 	'SELECT * FROM USUARIO WHERE id <> 1;',
 // 	'SELECT * FROM USUARIO WHERE id > 1;',
 // 	'SELECT * FROM USUARIO WHERE id < 1;',
