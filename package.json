@@ -15,9 +15,10 @@
   },
   "homepage": "https://github.com/PlayerGhost/Query-Parser#readme",
   "dependencies": {
-    "react": "^18.0.0",
-    "react-dom": "^18.0.0",
-    "zingchart": "^2.9.9"
+    "react": "^17.0.0",
+    "react-dom": "^17.0.0",
+    "zingchart": "^2.9.9",
+    "zingchart-react": "^3.1.4"
   },
   "devDependencies": {
     "@jest/globals": "^28.1.0",
