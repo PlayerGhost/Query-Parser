@@ -1,4 +1,6 @@
 import { databaseTable } from './db.js';
+//import  Springy from '../util/springy/springy.js';
+//import  Springyui   from '../util/springy/springyui.js';
 
 class TreeOptimizer {
 	constructor(query) {
@@ -21,18 +23,14 @@ class TreeOptimizer {
 
 			this.leaves.push(aux);
 		}
-
-		console.log('DEBUG');
-		console.log(this.buildJunction(this.leaves));
-		// console.log(this.leaves[2])
 	}
 
 	buildJunction(currentLeaves) {
 		if (currentLeaves.length > 1) {
 			const noEsquerdo = currentLeaves[0];
 			const noDireito = currentLeaves[1];
-			console.log('esq', noEsquerdo, 'esq')
-			console.log('dir', noDireito, 'dir')
+			//console.log('esq', noEsquerdo, 'esq')
+			//console.log('dir', noDireito, 'dir')
 			// const father = new No(
 			// 	'',
 			// 	noEsquerdo.aresta.projecao.concat(noDireito.aresta.projecao),
@@ -113,7 +111,6 @@ class No {
 
 	setEsquerdo(no) {
 		if (no == this) return
-
 		this.esquerdo = no
 	}
 
@@ -201,9 +198,18 @@ const teste =
 
 // console.log('----------------------------------------------------------------');
 const queryBodies = splitQueryIntoBodies(teste)
-console.log(queryBodies);
+//console.log(queryBodies);
 console.log();
-const tree = new TreeOptimizer(splitQueryIntoBodies(teste));
+const tree = new TreeOptimizer(splitQueryIntoBodies(teste))
+let treeStructure = tree.buildJunction(tree.leaves)
+//console.log("leavessss ----", this.leaves)
+console.log('DEBUG')
+console.log("final --->", treeStructure)
+console.log()
+
+//let graph = new Springy.Graph();
+
+console.log()
 
 export function splitQueryIntoBodies(query) {
 	let mySqlStringSplitted = query.split(' ');
