@@ -6,10 +6,18 @@
 	padding: 25px;
 }
 
+.corpo{
+	background-color: #d3d3d3;
+	padding: 25px;
+	border-radius: 20px;
+	height: calc(100vh - 50px);
+}
+
 .user-input {
 	display: flex;
 	flex-direction: row;
 	gap: 10px;
+	margin-bottom: 50px;
 }
 
 .error-message {
@@ -70,5 +78,12 @@
 }
 
 h2{
-	text-decoration: underline;
+	text-align: center;
+	font-family: 'Montserrat', sans-serif;
+}
+
+h1{
+	text-align: center;
+	margin-bottom: 50px;
+	font-family: 'Montserrat', sans-serif;
 }

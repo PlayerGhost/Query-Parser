@@ -5,7 +5,7 @@ import {
 	validateAttributes
 } from '../helpers/load-json';
 import { removeWhitespaces } from '../helpers/text-parser';
-import { regex } from '../helpers/regex';
+//import { regex } from '../helpers/regex';
 import { splitQueryIntoBodies } from '../helpers/relationalAlgebra';
 
 import './MainPage.css';
@@ -52,25 +52,27 @@ export default function MainPage() {
 
 	return (
 		<div className="main">
-			<h2>Processador de consultas</h2>
-			<div className="user-input">
-				<input
-					type="text"
-					id="query"
-					placeholder="Insira sua consulta SQL."
-					value={query}
-					onChange={(q) => setQuery(q.target.value)}
-					onKeyDown={(e) => e.keyCode === ENTER_KEYCODE && onClick()}
-				></input>
-				<button id="parse-query" onClick={onClick}>
-					Executar
-				</button>
-			</div>
-			<div className="results">
-				<h2>Resultado da consulta</h2>
-				{Boolean(error) && <h3 className="error-message">Erro: {error}</h3>}
-				{Boolean(result) && <div id="results-body">{result}</div>}
-			</div>
+			<section class="corpo">
+				<h1>Processador de consultas - AV2</h1>
+				<div className="user-input">
+					<input
+						type="text"
+						id="query"
+						placeholder="Insira sua consulta SQL."
+						value={query}
+						onChange={(q) => setQuery(q.target.value)}
+						onKeyDown={(e) => e.keyCode === ENTER_KEYCODE && onClick()}
+					></input>
+					<button id="parse-query" onClick={onClick}>
+						Executar
+					</button>
+				</div>
+				<div className="results">
+					<h2>Resultado da consulta</h2>
+					{Boolean(error) && <h3 className="error-message">Erro: {error}</h3>}
+					{Boolean(result) && <div id="results-body">{result}</div>}
+				</div>
+			</section>
 		</div>
 	);
 }
