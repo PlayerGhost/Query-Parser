@@ -45,7 +45,9 @@ const join = `JOIN ${chars2} ON ${chars2}\\s?=\\s?${chars2}`;
 const query = `^${select}\\s?(( ${where})?|( ${join})+?( ${where})?)?\\s?;$`;
 //const query = `^${select}\\s?( ${where})\\s?;$`
 
-export const regex = new RegExp(query, 'i');
+// export const regex = new RegExp(query, 'i');
+const regex = new RegExp(query, 'i');
+module.exports = regex;
 
 // /*const regexArray = [
 // 	/,,+/i,                                          // Vírgulas seguidas
