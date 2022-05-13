@@ -6,7 +6,11 @@ import {
 } from "../helpers/load-json"
 import { removeWhitespaces } from "../helpers/text-parser"
 //import { regex } from '../helpers/regex';
-import { splitQueryIntoBodies } from "../helpers/relationalAlgebra"
+//import { splitQueryIntoBodies } from "../helpers/relationalAlgebra"
+import { generateGraphToPlot } from "../helpers/relationalAlgebra1.js"
+import "zingchart/es6"
+import ZingChart from "zingchart-react"
+import "zingchart/modules-es6/zingchart-tree.min.js"
 
 import "./MainPage.css"
 
@@ -32,7 +36,7 @@ export default function MainPage() {
 			return
 		}
 
-		const bodies = splitQueryIntoBodies(filteredQuery)
+		/*const bodies = splitQueryIntoBodies(filteredQuery)
 		if (!bodies) {
 			showErrorMessage("Não foi possível decompor a query!")
 		}
@@ -41,13 +45,33 @@ export default function MainPage() {
 			showErrorMessage("Algum atributo/tabela não existe no banco de dados!")
 		}
 
-		setResult(JSON.stringify(bodies))
+		setResult(JSON.stringify(bodies))*/
 	}
 
 	const showErrorMessage = (message) => {
 		console.error(message)
 		setError(message)
 		setTimeout(() => setError(""), ERROR_MESSAGE_TIMEOUT)
+	}
+
+	let chartConfig = {
+		type: "tree",
+		options: {
+			aspect: "tree-down",
+			link: {
+				aspect: "line",
+			},
+			/* maxSize: 15,
+			minSize: 5,
+			node: {
+				type: "circle",
+				tooltip: {
+					padding: "8px 10px",
+					borderRadius: "3px",
+				},
+			}, */
+		},
+		series: generateGraphToPlot(),
 	}
 
 	return (
@@ -71,7 +95,11 @@ export default function MainPage() {
 					<h2>Resultado da consulta</h2>
 					{Boolean(error) && <h3 className="error-message">Erro: {error}</h3>}
 					{Boolean(result) && <div id="results-body">{result}</div>}
-					{Boolean(result) && <div id="graph"></div>}
+					{
+						<div id="graph">
+							<ZingChart data={chartConfig} />
+						</div>
+					}
 				</div>
 			</section>
 		</div>

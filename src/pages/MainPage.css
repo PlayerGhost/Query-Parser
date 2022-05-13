@@ -33,6 +33,7 @@
 	flex-direction: column;
 	gap: 10px;
 	grid-template-rows: 0.1fr auto;
+	align-items: center;
 }
 
 @keyframes fade {
@@ -91,9 +92,10 @@ h1 {
 }
 
 #graph {
-	padding: 10px;
+	padding: 1px;
 	border-radius: 5px;
 	border: 0.3px solid #800080;
-	width: 640px;
-	height: 480px;
+	width: 70%;
+	height: 50vh;
+	box-sizing: content-box;
 }
