@@ -1,4 +1,4 @@
-const regex = require('../src/helpers/regex');
+import { regex } from '../src/helpers/regex';
 
 test('PASS - Simple query', () => {
 	const query = `SELECT * FROM USUARIO;`;
@@ -47,5 +47,3 @@ test('FAIL - Missing semicolon', () => {
 	const result = new RegExp(regex).test(query);
 	expect(result).toBe(false);
 });
-
-// TODO Fazer verificações para analisar JOIN e ordem correta de filhos/leitura
