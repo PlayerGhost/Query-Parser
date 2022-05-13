@@ -1,71 +1,81 @@
 import { databaseTable } from './db.js';
+//import  Springy from '../util/springy/springy.js';
+//import  Springyui   from '../util/springy/springyui.js';
 
 class TreeOptimizer {
 	constructor(query) {
 		this.query = query
 		this.leaves = [];
-		/*this.leaves.push(
-			new No(
-				this.getTableSelections(query.tables[0], query.WHERE),
-				this.getTableAtributes(query.tables[0], query.SELECT),
-				query.FROM
-			)
-		);*/
-
+        this.order = 0;
 		for (let table of query.tables) {
-			let aux = new No(
-				this.getTableSelections(table, query.WHERE),
-				this.getTableAtributes(table, query.SELECT),
-				table
-			);
-
-			this.leaves.push(aux);
+            let selections = this.getTableSelections(table, query.WHERE)
+            let aux = new No(table)
+            this.leaves.push(aux);
+            for(let selec of selections){
+                aux.setPai(new No("σ"+selec))
+                aux = aux.getPai()
+            }
+            aux.setPai(new No("π"+this.getTableAtributes(table, query.SELECT)))
 		}
-
-		console.log('DEBUG');
-		console.log(this.buildJunction(this.leaves));
-		// console.log(this.leaves[2])
+        
+        let comparator = []
+        for(let i=0; i<this.leaves.length; i++){
+            comparator.push(this.leaves[i].getPai())
+        }
+        console.log(JSON.stringify(comparator))
+		console.log(this.startBuildJunction(comparator));
+        // console.log(JSON.stringify(this.leaves))
 	}
 
-	buildJunction(currentLeaves) {
-		if (currentLeaves.length > 1) {
-			const noEsquerdo = currentLeaves[0];
-			const noDireito = currentLeaves[1];
-			console.log('esq', noEsquerdo, 'esq')
-			console.log('dir', noDireito, 'dir')
-			// const father = new No(
-			// 	'',
-			// 	noEsquerdo.aresta.projecao.concat(noDireito.aresta.projecao),
-			// 	`${noEsquerdo.name + ' |x| <cond> (' + noDireito.name})`
-			// );
-
-			for (let onStructure of this.query.ON) {
-				if (onStructure.left.table == noEsquerdo.name && onStructure.right.table == noDireito.name) {
-					const father = new No(
-						'',
-						noEsquerdo.aresta.projecao.concat(noDireito.aresta.projecao),
-						`|x|${onStructure.expression}`
-					);
-
-					noEsquerdo.setPai(father)
-					noDireito.setPai(father)
-					father.setEsquerdo(noEsquerdo)
-					father.setDireito(noDireito)
-					return this.buildJunction([father, ...currentLeaves.slice(2)]);
-				}
-			}
-		}
-
-		return currentLeaves[0]
+	buildJunction(comparator, index, pairs) {
+        if(!comparator[index]){
+            console.log(JSON.stringify(this.leaves))   
+        }
+        if(comparator.length == 1){
+            return comparator[0]
+        }
+        if(comparator[index].getPai()){
+            comparator[index] = comparator[index].getPai()
+            comparator[index].setOrder(++this.order)
+            return this.buildJunction(comparator, index, pairs)
+        }else{
+            let prox = index == comparator.length-1 ? index-1 : index+1
+            if(pairs.length == 2){
+                console.log('entrou')
+                console.log(comparator)
+                const father = new No(comparator[index].name+","+comparator[prox].name)
+                comparator[prox].setPai(father)
+                comparator[index].setPai(father)
+                comparator[Math.min(prox, index)] = father
+                comparator.splice(Math.max(prox, index), 1)
+                pairs = []
+                pairs.push(father)
+                comparator[Math.min(prox, index)].setOrder(++this.order)
+                return this.buildJunction(comparator, prox, pairs)
+            }else{
+                pairs.push(comparator[index])
+                comparator[prox].setOrder(++this.order)
+                return this.buildJunction(comparator, prox, pairs)
+            }
+        }
 	}
 
-	buildTree(query) { }
+    startBuildJunction(comparator){
+        const index = this.getIndexBiggerPriority(comparator)
+        return this.buildJunction(comparator, index, [])
+    }
 
-	printLeaves() {
-		for (let leave of this.leaves) {
-			console.log(leave, '-->');
-		}
-	}
+    getIndexBiggerPriority(array){
+        let priorityIndex = 10;
+        let priorityValue = 10;
+        for(let i=0; i<array.length; i++){
+            if(array[i].priority < priorityValue){
+                priorityIndex = i
+                priorityValue = array[i].priority
+            }
+        }
+        return priorityIndex
+    }
 
 	getTableAtributes(table, select) {
 		let atributes = [];
@@ -97,15 +107,33 @@ class TreeOptimizer {
 		return databaseTable[table].includes(atribute);
 	}
 }
-
+let priorityRules = ['=', '<=', '>=', '<', '>', '<>']
 class No {
-	constructor(selecao, projecao, name) {
-		this.aresta = new Aresta(selecao, projecao);
+	constructor(name) {
 		this.name = name;
-		this.pai = null;
+		this.pai = null
 		this.esquerdo = null
 		this.direito = null
+        if(name.startsWith("σ")){
+            this.priority = priorityRules.indexOf(name.split(' ')[1])
+        }
 	}
+
+    setPriority(priority){
+        this.priority = priority
+    }
+
+    getPriority(){
+        return this.priority
+    }
+
+    setOrder(order){
+        this.order = order
+    }
+
+    getPai(){
+        return this.pai
+    }
 
 	setPai(no) {
 		this.pai = no;
@@ -113,7 +141,6 @@ class No {
 
 	setEsquerdo(no) {
 		if (no == this) return
-
 		this.esquerdo = no
 	}
 
@@ -123,87 +150,27 @@ class No {
 	}
 }
 
-class Aresta {
-	constructor(selecao, projecao) {
-		this.selecao = selecao;
-		this.projecao = projecao;
-	}
-}
-
-let relationalAlgebraStrings = {
-	SELECT: function (body) {
-		return `π ${body}`;
-	},
-	JOIN: function (body, fromBody) {
-		let relationalBodyString = `${fromBody} ⋈ ${body['ON'][0]} ${body['JOIN'][0]}`;
-		//delete body['ON'][0];
-		//delete body['JOIN'][0];
-
-		body['JOIN'].forEach((joinValue, index) => {
-			const onValue = body['ON'][index];
-
-			relationalBodyString = `${relationalBodyString} ⋈ ${onValue} ${joinValue}`;
-		});
-
-		return `(${relationalBodyString})`;
-	},
-	WHERE: function (body) {
-		return `σ ${body} `;
-	}
-};
-
-/*function printTest() {
-	console.log(bodies);
-	console.log();
-	console.log(relationalAlgebraStrings['SELECT'](bodies['SELECT']));
-	console.log(relationalAlgebraStrings['WHERE'](bodies['WHERE']));
-
-	let joinAux = { JOIN: bodies['JOIN'], ON: bodies['ON'] };
-
-	console.log(relationalAlgebraStrings['JOIN'](joinAux, bodies['FROM']));
-}*/
-/*
-SELECT
-IDUSUARIO,
-NOME,
-DATANASCIMENTO,
-DESCRICAO,
-SALDOINICIAL,
-UF, 
-DESCRIÇÃO
-FROM USUARIO
-JOIN CONTAS ON USUARIO.IDUSUARIO = CONTAS.USUARIO_IDUSUARIO
-JOIN TIPOCONTA ON TIPOCONTA.IDTIPOCONTA = CONTAS.TIPOCONTA_IDTIPOCONTA
-WHERE SALDOINICIAL < 3000 AND UF = 'CE' AND DESCRIÇÃO <> 'CONTA CORRENTE'";
-*/
-
-/*
-"SELECT NOME, DATANASCIMENTO, DESCRICAO, SALDOINICIAL
-FROM USUARIO
-JOIN CONTAS ON USUARIO.IDUSUARIO = CONTAS.USUARIO_IDUSUARIO
-WHERE SALDOINICIAL >=235 AND UF ='CE' AND CEP <> '62930000'";
-*/
-
-/*
-SELECT LNAME
-FROM EMPLOYEE, WORKS_ON, PROJECT
-WHERE PNAME = ‘AQUARIUS’ AND
-PNUMBER = PNO AND ESSN = SSN AND
-BDATE > ‘1957-12-31’
-*/
-//printTest();
 const teste =
 	"SELECT IDUSUARIO, NOME, DATANASCIMENTO, DESCRICAO, SALDOINICIAL, UF, DESCRIÇÃO FROM USUARIO JOIN CONTAS ON USUARIO.IDUSUARIO = CONTAS.USUARIO_IDUSUARIO JOIN TIPOCONTA ON TIPOCONTA.IDTIPOCONTA = CONTAS.TIPOCONTA_IDTIPOCONTA WHERE SALDOINICIAL < 3000 AND UF <> 'CE' AND DESCRIÇÃO = 'CONTA CORRENTE'";
 // const teste =
 // 	"SELECT NOME, DATANASCIMENTO, DESCRICAO, SALDOINICIAL FROM USUARIO JOIN CONTAS ON USUARIO.IDUSUARIO = CONTAS.USUARIO_IDUSUARIO WHERE SALDOINICIAL >= 235 AND UF = 'CE' AND CEP <> '62930000'";
 // const teste =
-// 	"SELECT LNAME	FROM EMPLOYEE, WORKS_ON, PROJECT WHERE PNAME = ‘AQUARIUS’ AND PNUMBER = PNO AND ESSN = SSN AND BDATE > ‘1957-12-31’";
+// 	"SELECT LNAME FROM EMPLOYEE, WORKS_ON, PROJECT WHERE PNAME = ‘AQUARIUS’ AND PNUMBER = PNO AND ESSN = SSN AND BDATE > ‘1957-12-31’";
 
 // console.log('----------------------------------------------------------------');
 const queryBodies = splitQueryIntoBodies(teste)
-console.log(queryBodies);
+//console.log(queryBodies);
 console.log();
-const tree = new TreeOptimizer(splitQueryIntoBodies(teste));
+const tree = new TreeOptimizer(splitQueryIntoBodies(teste))
+let treeStructure = tree.buildJunction(tree.leaves)
+//console.log("leavessss ----", this.leaves)
+console.log('DEBUG')
+console.log("final --->", treeStructure)
+console.log()
+
+//let graph = new Springy.Graph();
+
+console.log()
 
 export function splitQueryIntoBodies(query) {
 	let mySqlStringSplitted = query.split(' ');
