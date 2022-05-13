@@ -1,4 +1,6 @@
 import { databaseTable } from './db.js';
+//import  Springy from '../util/springy/springy.js';
+//import  Springyui   from '../util/springy/springyui.js';
 
 class TreeOptimizer {
 	constructor(query) {
@@ -139,7 +141,6 @@ class No {
 
 	setEsquerdo(no) {
 		if (no == this) return
-
 		this.esquerdo = no
 	}
 
@@ -158,9 +159,18 @@ const teste =
 
 // console.log('----------------------------------------------------------------');
 const queryBodies = splitQueryIntoBodies(teste)
-console.log(queryBodies);
+//console.log(queryBodies);
 console.log();
-const tree = new TreeOptimizer(splitQueryIntoBodies(teste));
+const tree = new TreeOptimizer(splitQueryIntoBodies(teste))
+let treeStructure = tree.buildJunction(tree.leaves)
+//console.log("leavessss ----", this.leaves)
+console.log('DEBUG')
+console.log("final --->", treeStructure)
+console.log()
+
+//let graph = new Springy.Graph();
+
+console.log()
 
 export function splitQueryIntoBodies(query) {
 	let mySqlStringSplitted = query.split(' ');
