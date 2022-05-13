@@ -89,3 +89,29 @@ h1{
 	margin-bottom: 50px;
 	font-family: 'Montserrat', sans-serif;
 }
+
+
+@media (max-width: 820px) {
+
+	#query {
+		width: 70%;
+		height: 30%;
+		padding: 10px 15px;
+		border-radius: 10px;
+	}
+
+	#parse-query {
+		width: 30%;
+		height: 30%;
+		padding: 10px;
+		font-weight: 700;
+		border-radius: 10px;
+		cursor: pointer;
+		box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+		background-color: #3e8be4;
+		color: white;
+		transition: 150ms opacity;
+	}
+	
+}
+
