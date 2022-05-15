@@ -1,3 +1,4 @@
 export const removeWhitespaces = (text) => {
-	return text.replaceAll(',\S{2,}', ',\S').replaceAll('\S{2,}', '\S');
+	const filterWhitespaceRegex = new RegExp(/\ {2,}/, 'g')
+	return text.replaceAll(filterWhitespaceRegex, ` `)
 };

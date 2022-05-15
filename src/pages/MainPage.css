@@ -54,6 +54,7 @@ h1 {
 	width: 100%;
 	padding: 10px 15px;
 	border-radius: 10px;
+	border: 1px solid #afafaf;
 }
 
 #parse-query {
@@ -91,6 +92,7 @@ h1 {
 	border: 0.3px solid #800080;
 	display: flex;
 	min-width: 100%;
+	min-height: 100vh;
 	justify-content: stretch;
 }
 

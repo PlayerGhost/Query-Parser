@@ -280,16 +280,16 @@ const teste =
 // console.log('----------------------------------------------------------------');
 //console.log(queryBodies);
 
-export function generateGraphToPlot() {
-	const queryBodies = splitQueryIntoBodies(teste)
+export function generateGraphToPlot(q) {
+	const queryBodies = splitQueryIntoBodies(q)
 	const tree = new TreeOptimizer(queryBodies).tree
 
-	console.log('DEBUG')
-	console.log("final --->", tree)
-	console.log()
+	// console.log('DEBUG')
+	// console.log("final --->", tree)
+	// console.log()
 	let graph = getNodeData(tree)
-	console.log(graph)
-	console.log()
+	// console.log(graph)
+	// console.log()
 
 	return graph
 }
@@ -312,10 +312,11 @@ function getNodeData(No) {
 	return noData
 }
 
-generateGraphToPlot()
+// generateGraphToPlot()
 
 export function splitQueryIntoBodies(query) {
 	let mySqlStringSplitted = query.split(' ');
+	// let mySqlStringSplitted = query.replace(';', '').split(' ');
 
 	let bodies = {};
 
