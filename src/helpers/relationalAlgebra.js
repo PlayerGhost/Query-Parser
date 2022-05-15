@@ -72,7 +72,7 @@ export class TreeOptimizer {
 		}
 
 		if (comparator.length == 1) {
-			return comparator[0];
+			return comparator[0].getPai();
 		}
 
 		let proxIndex = index == comparator.length - 1 ? index - 1 : index + 1;
@@ -108,8 +108,8 @@ export class TreeOptimizer {
 				`⋈${expression}`
 			)
 
-			/*father.setEsquerdo()
-			father.setDireito()*/
+			father.setEsquerdo(comparator[Math.min(index, proxIndex)])
+			father.setDireito(comparator[Math.max(index, proxIndex)])
 
 			let projectionAttributes = []
 
@@ -139,6 +139,8 @@ export class TreeOptimizer {
 			let fatherProjection = new No(
 				`π${projectionAttributes.join(", ")}`
 			)
+
+			fatherProjection.setEsquerdo(father)
 
 			father.setPai(fatherProjection)
 
