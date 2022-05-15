@@ -21,30 +21,33 @@ export class TreeOptimizer {
 		for (let i = 0; i < this.leaves.length; i++) {
 			comparator.push(this.leaves[i].getPai());
 		}
-		console.log(JSON.stringify(comparator));
-		console.log(this.startBuildJunction(comparator));
+		//console.log(JSON.stringify(comparator));
+		let a = this.startBuildJunction(comparator)
+		console.log(a);
 		// console.log(JSON.stringify(this.leaves))
 	}
 
 	buildJunction(comparator, index, pairs) {
-		if (!comparator[index]) {
+
+		/*if (!comparator[index]) {
 			console.log(JSON.stringify(this.leaves));
+			return this.leaves
 		}
 
 		if (comparator.length == 1) {
 			return comparator[0];
-		}
+		}*/
 
 		// TODO Index chega nulo neste if e quebra a aplicação
-		if (comparator[index].getPai()) {
+		/*if (comparator[index].getPai()) {
 			comparator[index] = comparator[index].getPai();
 			comparator[index].setOrder(++this.order);
 			return this.buildJunction(comparator, index, pairs);
 		} else {
 			let prox = index == comparator.length - 1 ? index - 1 : index + 1;
 			if (pairs.length == 2) {
-				console.log('entrou');
-				console.log(comparator);
+				//console.log('entrou');
+				//console.log(comparator);
 				const father = new No(
 					comparator[index].name + ',' + comparator[prox].name
 				);
@@ -61,6 +64,94 @@ export class TreeOptimizer {
 				comparator[prox].setOrder(++this.order);
 				return this.buildJunction(comparator, prox, pairs);
 			}
+		}*/
+
+		if (!comparator[index]) {
+			console.log(JSON.stringify(this.leaves));
+			return this.leaves
+		}
+
+		if (comparator.length == 1) {
+			return comparator[0];
+		}
+
+		let proxIndex = index == comparator.length - 1 ? index - 1 : index + 1;
+
+		if (comparator[index].getPai()) {
+			comparator[index] = comparator[index].getPai();
+			//comparator[index].setOrder(++this.order);
+
+			if (comparator[proxIndex].getPai()) {
+				comparator[proxIndex] = comparator[proxIndex].getPai();
+			}
+
+			return this.buildJunction(comparator, index, pairs);
+		} else {
+			let atual = comparator[index]
+			let prox = comparator[proxIndex]
+
+			let expression = ""
+
+			for (const on of this.query.ON) {
+				if (atual.name.includes(on.left.atribute)) {
+					expression = on.expression
+					break
+				}
+
+				if (atual.name.includes(on.right.atribute)) {
+					expression = on.expression
+					break
+				}
+			}
+
+			let father = new No(
+				`⋈${expression}`
+			)
+
+			/*father.setEsquerdo()
+			father.setDireito()*/
+
+			let projectionAttributes = []
+
+			projectionAttributes = atual.name.replaceAll("π", "").split(",")
+			projectionAttributes = projectionAttributes.concat(prox.name.replaceAll("π", "").split(","))
+
+			console.log("log", projectionAttributes)
+
+			for (let on of this.query.ON) {
+				if (expression == on.expression) {
+					if (projectionAttributes.includes(on.left.atribute)) {
+						if (!this.query.SELECT.includes(on.left.atribute)) {
+							let indexToRemove = projectionAttributes.indexOf(on.left.atribute)
+							projectionAttributes.splice(indexToRemove, 1)
+						}
+					}
+
+					if (projectionAttributes.includes(on.right.atribute)) {
+						if (!this.query.SELECT.includes(on.right.atribute)) {
+							let indexToRemove = projectionAttributes.indexOf(on.right.atribute)
+							projectionAttributes.splice(indexToRemove, 1)
+						}
+					}
+				}
+			}
+
+			let fatherProjection = new No(
+				`π${projectionAttributes.join(", ")}`
+			)
+
+			father.setPai(fatherProjection)
+
+			comparator[index].setPai(father);
+			comparator[proxIndex].setPai(father);
+
+			comparator[Math.min(proxIndex, index)] = father;
+			comparator.splice(Math.max(proxIndex, index), 1);
+
+			/*pairs = [];
+			pairs.push(father);*/
+			//comparator[Math.min(prox, index)].setOrder(++this.order);
+			return this.buildJunction(comparator, proxIndex, pairs);
 		}
 	}
 
@@ -82,17 +173,25 @@ export class TreeOptimizer {
 	}
 
 	getTableAtributes(table, select) {
-		let atributes = [];
+		let atributes = new Set();
 
 		for (let i of select.split(',')) {
 			i = i.trim();
 
 			if (this.isAtributeFromTable(table, i)) {
-				atributes.push(i);
+				atributes.add(i);
 			}
 		}
 
-		return atributes;
+		for (const on of this.query.ON) {
+			if (table == on.left.table) {
+				atributes.add(on.left.atribute)
+			} else if (table == on.right.table) {
+				atributes.add(on.right.atribute)
+			}
+		}
+
+		return Array.from(atributes);
 	}
 
 	getTableSelections(table, WHERE) {
@@ -111,15 +210,17 @@ export class TreeOptimizer {
 		return databaseTable[table].includes(atribute);
 	}
 }
-let priorityRules = ['=', '<=', '>=', '<', '>', '<>'];
+
 class No {
 	constructor(name) {
 		this.name = name;
 		this.pai = null;
 		this.esquerdo = null;
 		this.direito = null;
+		this.priorityRules = ['=', '<=', '>=', '<', '>', '<>'];
+
 		if (name.startsWith('σ')) {
-			this.priority = priorityRules.indexOf(name.split(' ')[1]);
+			this.priority = this.priorityRules.indexOf(name.split(' ')[1]);
 			return;
 		}
 
@@ -159,7 +260,7 @@ class No {
 }
 
 const teste =
-	"SELECT IDUSUARIO, NOME, DATANASCIMENTO, DESCRICAO, SALDOINICIAL, UF, DESCRIÇÃO FROM USUARIO JOIN CONTAS ON USUARIO.IDUSUARIO = CONTAS.USUARIO_IDUSUARIO JOIN TIPOCONTA ON TIPOCONTA.IDTIPOCONTA = CONTAS.TIPOCONTA_IDTIPOCONTA WHERE SALDOINICIAL < 3000 AND UF <> 'CE' AND DESCRIÇÃO = 'CONTA CORRENTE'";
+	"SELECT IDUSUARIO, NOME, DATANASCIMENTO, DESCRICAO, SALDOINICIAL, UF, DESCRIÇÃO FROM USUARIO JOIN CONTAS ON USUARIO.IDUSUARIO = CONTAS.USUARIO_IDUSUARIO JOIN TIPOCONTA ON TIPOCONTA.IDTIPOCONTA = CONTAS.TIPOCONTA_IDTIPOCONTA WHERE SALDOINICIAL < 3000 AND UF = 'CE' AND DESCRIÇÃO <> 'CONTA CORRENTE'";
 // const teste =
 // 	"SELECT NOME, DATANASCIMENTO, DESCRICAO, SALDOINICIAL FROM USUARIO JOIN CONTAS ON USUARIO.IDUSUARIO = CONTAS.USUARIO_IDUSUARIO WHERE SALDOINICIAL >= 235 AND UF = 'CE' AND CEP <> '62930000'";
 // const teste =
