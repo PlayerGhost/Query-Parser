@@ -1,39 +1,39 @@
-import { useState } from "react"
+import { useState } from 'react';
 
 import {
 	// getAttributesFromTable,
-	validateAttributes,
-} from "../helpers/load-json"
-import { removeWhitespaces } from "../helpers/text-parser"
+	validateAttributes
+} from '../helpers/load-json';
+import { removeWhitespaces } from '../helpers/text-parser';
 //import { regex } from '../helpers/regex';
 //import { splitQueryIntoBodies } from "../helpers/relationalAlgebra"
-import { generateGraphToPlot } from "../helpers/relationalAlgebra.js"
-import "zingchart/es6"
-import ZingChart from "zingchart-react"
-import "zingchart/modules-es6/zingchart-tree.min.js"
+import { generateGraphToPlot } from '../helpers/relationalAlgebra.js';
+import 'zingchart/es6';
+import ZingChart from 'zingchart-react';
+import 'zingchart/modules-es6/zingchart-tree.min.js';
 
-import "./MainPage.css"
+import './MainPage.css';
 
-const ENTER_KEYCODE = 13
-const ERROR_MESSAGE_TIMEOUT = 3000
+const ENTER_KEYCODE = 13;
+const ERROR_MESSAGE_TIMEOUT = 3000;
 
 export default function MainPage() {
-	const [query, setQuery] = useState("")
-	const [result, setResult] = useState("")
-	const [error, setError] = useState("")
+	const [query, setQuery] = useState('');
+	const [result, setResult] = useState('');
+	const [error, setError] = useState('');
 
 	const onClick = () => {
 		if (!query) {
-			showErrorMessage("Sem query!")
-			return
+			showErrorMessage('Sem query!');
+			return;
 		}
 
-		const filteredQuery = removeWhitespaces(query)
+		const filteredQuery = removeWhitespaces(query);
 
 		if (!filteredQuery.match(regex)) {
-			console.warn("Query filtrada", filteredQuery)
-			showErrorMessage("Query não passou no regex de verificação inicial!")
-			return
+			console.warn('Query filtrada', filteredQuery);
+			showErrorMessage('Query não passou no regex de verificação inicial!');
+			return;
 		}
 
 		/*const bodies = splitQueryIntoBodies(filteredQuery)
@@ -46,46 +46,39 @@ export default function MainPage() {
 		}
 
 		setResult(JSON.stringify(bodies))*/
-	}
+	};
 
 	const showErrorMessage = (message) => {
-		console.error(message)
-		setError(message)
-		setTimeout(() => setError(""), ERROR_MESSAGE_TIMEOUT)
-	}
+		console.error(message);
+		setError(message);
+		setTimeout(() => setError(''), ERROR_MESSAGE_TIMEOUT);
+	};
 
 	let chartConfig = {
-		type: "tree",
+		type: 'tree',
 		options: {
-			aspect: "tree-down",
+			aspect: 'tree-down',
 			orgChart: true,
 			link: {
-				aspect: "line",
+				aspect: 'line'
 			},
 			node: {
-				backgroundColor: "rgba(0,0,0,0)",
-				width: '600%',
-      			//height: '100%',
+				backgroundColor: 'rgba(0,0,0,0)',
 				hoverState: {
-					visible: false,
+					visible: false
 				},
 				label: {
-					//color: "#fff",
-					//fontSize: "10px",
-				},
-			},
-			/* maxSize: 15,
-			minSize: 5,
-			node: {
-				type: "circle",
-				tooltip: {
-					padding: "8px 10px",
-					borderRadius: "3px",
-				},
-			}, */
+					width: '100%',
+					fontSize: '10px'
+				}
+			}
 		},
-		series: generateGraphToPlot(),
-	}
+		plotarea: {
+			marginLeft: 150,
+			marginRight: 170
+		},
+		series: generateGraphToPlot()
+	};
 
 	return (
 		<div className="main">
@@ -116,5 +109,5 @@ export default function MainPage() {
 				</div>
 			</section>
 		</div>
-	)
+	);
 }
