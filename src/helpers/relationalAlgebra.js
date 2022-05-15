@@ -6,25 +6,35 @@ export class TreeOptimizer {
 		this.leaves = [];
 		this.order = 0;
 
-		for (let table of query.tables) {
-			let selections = this.getTableSelections(table, query.WHERE);
-			let aux = new No(table);
-			this.leaves.push(aux);
+		this.setupTreeJunction();
+	}
+
+	setupTreeJunction() {
+		for (let table of this.query.tables) {
+			let selections = this.getTableSelections(table, this.query.WHERE);
+			let tableNode = new No(table);
+			let expressionNode
+			this.leaves.push(tableNode);
+
 			for (let selec of selections) {
-				aux.setPai(new No('σ' + selec));
-				aux = aux.getPai();
+				let paiTableNode = new No('σ' + selec)
+				tableNode.setPai(paiTableNode);
+				paiTableNode.setEsquerdo(tableNode)
+
+				expressionNode = tableNode.getPai();
 			}
-			aux.setPai(new No('π' + this.getTableAtributes(table, query.SELECT)));
+
+			let expressionNodePai = new No('π' + this.getTableAtributes(table, this.query.SELECT))
+			expressionNode.setPai(expressionNodePai);
+			expressionNodePai.setEsquerdo(expressionNode)
 		}
 
-		let comparator = [];
+		/*let comparator = [];
 		for (let i = 0; i < this.leaves.length; i++) {
 			comparator.push(this.leaves[i].getPai());
-		}
-		//console.log(JSON.stringify(comparator));
-		let a = this.startBuildJunction(comparator)
-		console.log(a);
-		// console.log(JSON.stringify(this.leaves))
+		}*/
+
+		this.tree = this.startBuildJunction(this.leaves);
 	}
 
 	buildJunction(comparator, index, pairs) {
@@ -67,7 +77,6 @@ export class TreeOptimizer {
 		}*/
 
 		if (!comparator[index]) {
-			console.log(JSON.stringify(this.leaves));
 			return this.leaves
 		}
 
@@ -158,7 +167,9 @@ export class TreeOptimizer {
 	}
 
 	startBuildJunction(comparator) {
+		console.log(`comparator`, comparator)
 		const index = this.getIndexBiggerPriority(comparator);
+		console.log(`index`, index)
 		return this.buildJunction(comparator, index, []);
 	}
 
@@ -220,6 +231,7 @@ class No {
 		this.esquerdo = null;
 		this.direito = null;
 		this.priorityRules = ['=', '<=', '>=', '<', '>', '<>'];
+		this.order = -1;
 
 		if (name.startsWith('σ')) {
 			this.priority = this.priorityRules.indexOf(name.split(' ')[1]);
@@ -227,7 +239,6 @@ class No {
 		}
 
 		this.priority = -1;
-		this.order = -1;
 	}
 
 	setPriority(priority) {
@@ -273,21 +284,34 @@ const teste =
 
 export function generateGraphToPlot() {
 	const queryBodies = splitQueryIntoBodies(teste)
-	const tree = new TreeOptimizer(splitQueryIntoBodies(teste))
-	let treeStructure = tree.buildJunction(tree.leaves)
-
-	let graph = []
-	/*{
-		id: 'theworld',
-		parent: '',
-		name: 'The World',
-	}*/
+	const tree = new TreeOptimizer(queryBodies).tree
 
 	console.log('DEBUG')
-	console.log("final --->", treeStructure)
+	console.log("final --->", tree)
+	console.log()
+	let graph = getNodeData(tree)
+	console.log(graph)
 	console.log()
 
 	return graph
+}
+
+function getNodeData(No) {
+	let noData = [{
+		id: No.name,
+		parent: No.pai != null ? No.pai.name : "",
+		name: No.name
+	}]
+
+	if (No.esquerdo != null) {
+		noData = noData.concat(getNodeData(No.esquerdo))
+	}
+
+	if (No.direito != null) {
+		noData = noData.concat(getNodeData(No.direito))
+	}
+
+	return noData
 }
 
 generateGraphToPlot()
@@ -359,7 +383,6 @@ export function splitQueryIntoBodies(query) {
 
 	for (let i of operatorsPriority) {
 		for (let j of expressions) {
-			// console.log('sera q tem ', i, ' no ', j, '?', j.includes(i))
 			if (j.includes(i)) {
 				expressionsPriority.add(j.trim());
 

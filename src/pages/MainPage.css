@@ -95,7 +95,12 @@ h1 {
 	padding: 1px;
 	border-radius: 5px;
 	border: 0.3px solid #800080;
-	width: 70%;
+	width: 60vw;
 	height: 53vh;
 	box-sizing: content-box;
+}
+
+
+.No{
+	background-color:red;
 }

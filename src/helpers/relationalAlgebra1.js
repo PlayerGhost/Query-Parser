@@ -202,12 +202,6 @@ export function generateGraphToPlot() {
 	const tree = new TreeOptimizer(queryBodies)
 	let treeStructure = tree.buildJunction(tree.leaves)
 
-	/*{
-		id: 'theworld',
-		parent: '',
-		name: 'The World',
-	}*/
-
 	console.log('DEBUG')
 	console.log("final --->", treeStructure)
 	console.log()

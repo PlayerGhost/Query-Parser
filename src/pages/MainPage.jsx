@@ -7,7 +7,7 @@ import {
 import { removeWhitespaces } from "../helpers/text-parser"
 //import { regex } from '../helpers/regex';
 //import { splitQueryIntoBodies } from "../helpers/relationalAlgebra"
-import { generateGraphToPlot } from "../helpers/relationalAlgebra1.js"
+import { generateGraphToPlot } from "../helpers/relationalAlgebra.js"
 import "zingchart/es6"
 import ZingChart from "zingchart-react"
 import "zingchart/modules-es6/zingchart-tree.min.js"
@@ -58,8 +58,21 @@ export default function MainPage() {
 		type: "tree",
 		options: {
 			aspect: "tree-down",
+			orgChart: true,
 			link: {
 				aspect: "line",
+			},
+			node: {
+				backgroundColor: "rgba(0,0,0,0)",
+				width: '600%',
+      			//height: '100%',
+				hoverState: {
+					visible: false,
+				},
+				label: {
+					//color: "#fff",
+					//fontSize: "10px",
+				},
 			},
 			/* maxSize: 15,
 			minSize: 5,
