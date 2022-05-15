@@ -74,7 +74,7 @@ export default function MainPage() {
 					//fontSize: "10px",
 				},
 			},
-			/* maxSize: 15,
+							/* maxSize: 15,
 			minSize: 5,
 			node: {
 				type: "circle",
@@ -85,6 +85,11 @@ export default function MainPage() {
 			}, */
 		},
 		series: generateGraphToPlot(),
+plotarea: {
+					marginLeft: 70,
+					marginRight: 60
+				},
+
 	}
 
 	return (

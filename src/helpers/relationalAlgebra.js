@@ -9,79 +9,61 @@ export class TreeOptimizer {
 		this.setupTreeJunction();
 	}
 
+	filterDuplicatedNodesInLeaves() {
+		let duplicatedNodeFound = true
+		while (duplicatedNodeFound) {
+			duplicatedNodeFound = false;
+
+			for (let i = 0; i < this.leaves.length; i++) {
+				const node = this.leaves[i];
+				if (this.leaves.filter((n) => n.name == node.name).length > 1) {
+					this.leaves.splice(i, 1);
+					duplicatedNodeFound = true;
+					break;
+				}
+			}
+		}
+	}
+
 	setupTreeJunction() {
 		for (let table of this.query.tables) {
 			let selections = this.getTableSelections(table, this.query.WHERE);
 			let tableNode = new No(table);
-			let expressionNode
+			let expressionNode;
 			this.leaves.push(tableNode);
 
 			for (let selec of selections) {
-				let paiTableNode = new No('σ' + selec)
+				let paiTableNode = new No('σ' + selec);
 				tableNode.setPai(paiTableNode);
-				paiTableNode.setEsquerdo(tableNode)
+				paiTableNode.setEsquerdo(tableNode);
 
 				expressionNode = tableNode.getPai();
 			}
 
-			let expressionNodePai = new No('π' + this.getTableAtributes(table, this.query.SELECT))
+			let expressionNodePai = new No(
+				'π' + this.getTableAtributes(table, this.query.SELECT)
+			);
 			expressionNode.setPai(expressionNodePai);
-			expressionNodePai.setEsquerdo(expressionNode)
+			expressionNodePai.setEsquerdo(expressionNode);
 		}
 
-		/*let comparator = [];
-		for (let i = 0; i < this.leaves.length; i++) {
-			comparator.push(this.leaves[i].getPai());
-		}*/
+		console.log('pufavo funciona')
 
+		console.log(this.leaves)
+		this.filterDuplicatedNodesInLeaves();
+		console.log(this.leaves)
 		this.tree = this.startBuildJunction(this.leaves);
+
+		console.log(this.tree)
 	}
 
-	buildJunction(comparator, index, pairs) {
-
-		/*if (!comparator[index]) {
-			console.log(JSON.stringify(this.leaves));
-			return this.leaves
-		}
-
+	buildJunction(comparator, index) {
 		if (comparator.length == 1) {
-			return comparator[0];
-		}*/
-
-		// TODO Index chega nulo neste if e quebra a aplicação
-		/*if (comparator[index].getPai()) {
-			comparator[index] = comparator[index].getPai();
-			comparator[index].setOrder(++this.order);
-			return this.buildJunction(comparator, index, pairs);
-		} else {
-			let prox = index == comparator.length - 1 ? index - 1 : index + 1;
-			if (pairs.length == 2) {
-				//console.log('entrou');
-				//console.log(comparator);
-				const father = new No(
-					comparator[index].name + ',' + comparator[prox].name
-				);
-				comparator[prox].setPai(father);
-				comparator[index].setPai(father);
-				comparator[Math.min(prox, index)] = father;
-				comparator.splice(Math.max(prox, index), 1);
-				pairs = [];
-				pairs.push(father);
-				comparator[Math.min(prox, index)].setOrder(++this.order);
-				return this.buildJunction(comparator, prox, pairs);
-			} else {
-				pairs.push(comparator[index]);
-				comparator[prox].setOrder(++this.order);
-				return this.buildJunction(comparator, prox, pairs);
-			}
-		}*/
+			return comparator[0].getPai();
+		}
 
 		if (!comparator[index]) {
 			return this.leaves
-		}
-
-		if (comparator.length == 1) {
-			return comparator[0].getPai();
 		}
 
 		let proxIndex = index == comparator.length - 1 ? index - 1 : index + 1;
@@ -94,64 +76,66 @@ export class TreeOptimizer {
 				comparator[proxIndex] = comparator[proxIndex].getPai();
 			}
 
-			return this.buildJunction(comparator, index, pairs);
+			return this.buildJunction(comparator, index);
 		} else {
-			let atual = comparator[index]
-			let prox = comparator[proxIndex]
+			let atual = comparator[index];
+			let prox = comparator[proxIndex];
 
-			let expression = ""
+			let expression = '';
 
 			for (const on of this.query.ON) {
 				if (atual.name.includes(on.left.atribute)) {
-					expression = on.expression
-					break
+					expression = on.expression;
+					break;
 				}
 
 				if (atual.name.includes(on.right.atribute)) {
-					expression = on.expression
-					break
+					expression = on.expression;
+					break;
 				}
 			}
 
-			let father = new No(
-				`⋈${expression}`
-			)
+			let father = new No(`⋈${expression}`);
 
-			father.setEsquerdo(comparator[Math.min(index, proxIndex)])
-			father.setDireito(comparator[Math.max(index, proxIndex)])
+			father.setEsquerdo(comparator[Math.min(index, proxIndex)]);
+			father.setDireito(comparator[Math.max(index, proxIndex)]);
 
-			let projectionAttributes = []
+			let projectionAttributes = [];
 
-			projectionAttributes = atual.name.replaceAll("π", "").split(",")
-			projectionAttributes = projectionAttributes.concat(prox.name.replaceAll("π", "").split(","))
+			projectionAttributes = atual.name.replaceAll('π', '').split(',');
+			projectionAttributes = projectionAttributes.concat(
+				prox.name.replaceAll('π', '').split(',')
+			);
 
-			console.log("log", projectionAttributes)
+			console.log('log', projectionAttributes);
 
 			for (let on of this.query.ON) {
 				if (expression == on.expression) {
 					if (projectionAttributes.includes(on.left.atribute)) {
 						if (!this.query.SELECT.includes(on.left.atribute)) {
-							let indexToRemove = projectionAttributes.indexOf(on.left.atribute)
-							projectionAttributes.splice(indexToRemove, 1)
+							let indexToRemove = projectionAttributes.indexOf(
+								on.left.atribute
+							);
+							projectionAttributes.splice(indexToRemove, 1);
 						}
 					}
 
 					if (projectionAttributes.includes(on.right.atribute)) {
 						if (!this.query.SELECT.includes(on.right.atribute)) {
-							let indexToRemove = projectionAttributes.indexOf(on.right.atribute)
-							projectionAttributes.splice(indexToRemove, 1)
+							let indexToRemove = projectionAttributes.indexOf(
+								on.right.atribute
+							);
+							projectionAttributes.splice(indexToRemove, 1);
 						}
 					}
 				}
 			}
 
-			let fatherProjection = new No(
-				`π${projectionAttributes.join(", ")}`
-			)
+			let fatherProjection = new No(`π${projectionAttributes.join(', ')}`);
 
-			fatherProjection.setEsquerdo(father)
+			fatherProjection.setEsquerdo(father);
 
-			father.setPai(fatherProjection)
+			father.setPai(fatherProjection);
 
 			comparator[index].setPai(father);
 			comparator[proxIndex].setPai(father);
@@ -162,14 +146,14 @@ export class TreeOptimizer {
 			/*pairs = [];
 			pairs.push(father);*/
 			//comparator[Math.min(prox, index)].setOrder(++this.order);
-			return this.buildJunction(comparator, proxIndex, pairs);
+			return this.buildJunction(comparator, proxIndex);
 		}
 	}
 
 	startBuildJunction(comparator) {
-		console.log(`comparator`, comparator)
+		console.log(`comparator`, comparator);
 		const index = this.getIndexBiggerPriority(comparator);
-		console.log(`index`, index)
+		console.log(`index`, index);
 		return this.buildJunction(comparator, index, []);
 	}
 
@@ -198,9 +182,9 @@ export class TreeOptimizer {
 
 		for (const on of this.query.ON) {
 			if (table == on.left.table) {
-				atributes.add(on.left.atribute)
+				atributes.add(on.left.atribute);
 			} else if (table == on.right.table) {
-				atributes.add(on.right.atribute)
+				atributes.add(on.right.atribute);
 			}
 		}
 
@@ -272,49 +256,53 @@ class No {
 	}
 }
 
+// const teste =
+// 	"SELECT IDUSUARIO, NOME, DATANASCIMENTO, DESCRICAO, SALDOINICIAL, UF, DESCRIÇÃO FROM USUARIO JOIN CONTAS ON USUARIO.IDUSUARIO = CONTAS.USUARIO_IDUSUARIO JOIN TIPOCONTA ON TIPOCONTA.IDTIPOCONTA = CONTAS.TIPOCONTA_IDTIPOCONTA WHERE SALDOINICIAL < 3000 AND UF = 'CE' AND DESCRIÇÃO <> 'CONTA CORRENTE'";
+
 const teste =
-	"SELECT IDUSUARIO, NOME, DATANASCIMENTO, DESCRICAO, SALDOINICIAL, UF, DESCRIÇÃO FROM USUARIO JOIN CONTAS ON USUARIO.IDUSUARIO = CONTAS.USUARIO_IDUSUARIO JOIN TIPOCONTA ON TIPOCONTA.IDTIPOCONTA = CONTAS.TIPOCONTA_IDTIPOCONTA WHERE SALDOINICIAL < 3000 AND UF = 'CE' AND DESCRIÇÃO <> 'CONTA CORRENTE'";
-// const teste =
-// 	"SELECT NOME, DATANASCIMENTO, DESCRICAO, SALDOINICIAL FROM USUARIO JOIN CONTAS ON USUARIO.IDUSUARIO = CONTAS.USUARIO_IDUSUARIO WHERE SALDOINICIAL >= 235 AND UF = 'CE' AND CEP <> '62930000'";
-// const teste =
-// 	"SELECT LNAME FROM EMPLOYEE, WORKS_ON, PROJECT WHERE PNAME = ‘AQUARIUS’ AND PNUMBER = PNO AND ESSN = SSN AND BDATE > ‘1957-12-31’";
+	// "SELECT IDUSUARIO, NOME, DATANASCIMENTO, DESCRICAO, SALDOINICIAL, UF, DESCRIÇÃO FROM USUARIO JOIN CONTAS ON USUARIO.IDUSUARIO = CONTAS.USUARIO_IDUSUARIO JOIN TIPOCONTA ON TIPOCONTA.IDTIPOCONTA = CONTAS.TIPOCONTA_IDTIPOCONTA WHERE SALDOINICIAL < 3000 AND UF = 'CE' AND DESCRIÇÃO <> 'CONTA CORRENTE' AND IDUSUARIO > 3;"
+	// "SELECT IDUSUARIO, NOME, DATANASCIMENTO, DESCRICAO, SALDOINICIAL, UF, DESCRIÇÃO FROM USUARIO JOIN CONTAS ON USUARIO.IDUSUARIO = CONTAS.USUARIO_IDUSUARIO JOIN TIPOCONTA ON TIPOCONTA.IDTIPOCONTA = CONTAS.TIPOCONTA_IDTIPOCONTA WHERE SALDOINICIAL < 3000 AND UF = 'CE' AND DESCRIÇÃO <> 'CONTA CORRENTE';"
+
+	"SELECT NOME, DATANASCIMENTO, DESCRICAO, SALDOINICIAL FROM USUARIO JOIN CONTAS ON USUARIO.IDUSUARIO = CONTAS.USUARIO_IDUSUARIO WHERE SALDOINICIAL >=235 AND UF ='CE' AND CEP <> '62930000';";
 
 // console.log('----------------------------------------------------------------');
 //console.log(queryBodies);
 
 export function generateGraphToPlot() {
-	const queryBodies = splitQueryIntoBodies(teste)
-	const tree = new TreeOptimizer(queryBodies).tree
+	const queryBodies = splitQueryIntoBodies(teste);
+	const tree = new TreeOptimizer(queryBodies).tree;
 
-	console.log('DEBUG')
-	console.log("final --->", tree)
-	console.log()
-	let graph = getNodeData(tree)
-	console.log(graph)
-	console.log()
+	console.log('DEBUG');
+	console.log('final --->', tree);
+	console.log();
+	let graph = getNodeData(tree);
+	console.log(graph);
+	console.log();
 
-	return graph
+	return graph;
 }
 
 function getNodeData(No) {
-	let noData = [{
-		id: No.name,
-		parent: No.pai != null ? No.pai.name : "",
-		name: No.name
-	}]
+	let noData = [
+		{
+			id: No.name,
+			parent: No.pai != null ? No.pai.name : '',
+			name: No.name
+		}
+	];
 
 	if (No.esquerdo != null) {
-		noData = noData.concat(getNodeData(No.esquerdo))
+		noData = noData.concat(getNodeData(No.esquerdo));
 	}
 
 	if (No.direito != null) {
-		noData = noData.concat(getNodeData(No.direito))
+		noData = noData.concat(getNodeData(No.direito));
 	}
 
-	return noData
+	return noData;
 }
 
-generateGraphToPlot()
+generateGraphToPlot();
 
 export function splitQueryIntoBodies(query) {
 	let mySqlStringSplitted = query.split(' ');
