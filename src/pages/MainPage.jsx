@@ -62,6 +62,8 @@ export default function MainPage() {
 			link: {
 				aspect: "line",
 			},
+			//maxSize: 15,
+			//minSize: 5,
 			node: {
 				backgroundColor: "rgba(0,0,0,0)",
 				//width: "600%",
@@ -70,13 +72,12 @@ export default function MainPage() {
 					visible: false,
 				},
 				label: {
-					//color: "#fff",
-					//fontSize: "10px",
+					fontSize: "10px",
+					color: "#000000"
 				},
 			},
-			/* maxSize: 15,
-			minSize: 5,
-			node: {
+			
+			/*node: {
 				type: "circle",
 				tooltip: {
 					padding: "8px 10px",
@@ -84,7 +85,14 @@ export default function MainPage() {
 				},
 			}, */
 		},
+
+		plotarea: {
+			marginLeft: 150,
+			marginRight: 150
+		},
+
 		series: generateGraphToPlot()
+
 		/*series: {
 			values: generateGraphToPlot(),
 			backgroundColor: '#FFC107'
