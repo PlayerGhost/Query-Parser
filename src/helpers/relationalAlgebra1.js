@@ -1,110 +1,251 @@
-import { databaseTable } from './db.js';
+import { databaseTable } from './db.js'
+import Graph from "graphology";
+import Sigma from "sigma";
 
-class TreeOptimizer {
+let operatorsPriority = ['=', '<=', '>=', '<', '>', '<>']
+
+export class TreeOptimizer {
 	constructor(query) {
 		this.query = query
-		this.leaves = [];
-		/*this.leaves.push(
-			new No(
-				this.getTableSelections(query.tables[0], query.WHERE),
-				this.getTableAtributes(query.tables[0], query.SELECT),
-				query.FROM
-			)
-		);*/
+		this.leaves = []
+		this.order = 0
+		this.hasJoin = false
 
-		for (let table of query.tables) {
-			let aux = new No(
-				this.getTableSelections(table, query.WHERE),
-				this.getTableAtributes(table, query.SELECT),
-				table
-			);
+		if (this.query.JOIN != undefined) {
+			this.hasJoin = true
+		}
 
-			this.leaves.push(aux);
+		this.setupTree()
+	}
+
+	setupTree() {
+		for (let table of this.query.tables) {
+			let selections = this.getTableSelections(table, this.query.WHERE)
+			let tableNode = new No(table)
+			this.leaves.push(tableNode)
+
+			for (let selec of selections) {
+				let paiTableNode = new No('σ' + selec)
+				tableNode.setPai(paiTableNode)
+				paiTableNode.setEsquerdo(tableNode)
+
+				tableNode = tableNode.getPai()
+			}
+
+			let tableNodePai = new No('π' + this.getTableAtributes(table, this.query.SELECT))
+			tableNode.setPai(tableNodePai)
+			tableNodePai.setEsquerdo(tableNode)
+		}
+
+		/*let comparator = [];
+		for (let i = 0; i < this.leaves.length; i++) {
+			comparator.push(this.leaves[i].getPai());
+		}*/
+
+		if (this.hasJoin) {
+			this.tree = this.startBuildJunction(this.leaves)
+		} else {
+			this.tree = this.buildTreeSelect(this.leaves[0])
+			let a = 0
 		}
 	}
 
-	buildJunction(currentLeaves) {
-		if (currentLeaves.length > 1) {
-			const noEsquerdo = currentLeaves[0];
-			const noDireito = currentLeaves[1];
-			//console.log('esq', noEsquerdo, 'esq')
-			//console.log('dir', noDireito, 'dir')
-			// const father = new No(
-			// 	'',
-			// 	noEsquerdo.aresta.projecao.concat(noDireito.aresta.projecao),
-			// 	`${noEsquerdo.name + ' |x| <cond> (' + noDireito.name})`
-			// );
+	buildTreeSelect(No) {
+		if (No.pai != null) {
+			return this.buildTreeSelect(No.pai)
+		} else {
+			return No
+		}
+	}
 
-			for (let onStructure of this.query.ON) {
-				if (onStructure.left.table == noEsquerdo.name && onStructure.right.table == noDireito.name) {
-					const father = new No(
-						'',
-						noEsquerdo.aresta.projecao.concat(noDireito.aresta.projecao),
-						`|x|${onStructure.expression}`
-					);
+	buildJunction(comparator, index, pairs) {
+		if (!comparator[index]) {
+			return this.leaves
+		}
 
-					noEsquerdo.setPai(father)
-					noDireito.setPai(father)
-					father.setEsquerdo(noEsquerdo)
-					father.setDireito(noDireito)
-					return this.buildJunction([father, ...currentLeaves.slice(2)]);
+		if (comparator.length == 1) {
+			return comparator[0].getPai()
+		}
+
+		let proxIndex = index == comparator.length - 1 ? index - 1 : index + 1
+
+		if (comparator[index].getPai()) {
+			comparator[index] = comparator[index].getPai()
+			//comparator[index].setOrder(++this.order);
+
+			if (comparator[proxIndex].getPai()) {
+				comparator[proxIndex] = comparator[proxIndex].getPai()
+			}
+
+			return this.buildJunction(comparator, index, pairs)
+		} else {
+			let atual = comparator[index]
+			let prox = comparator[proxIndex]
+
+			let expression = ""
+
+			for (const on of this.query.ON) {
+				if (atual.name.includes(on.left.atribute)) {
+					expression = on.expression
+					break
+				}
+
+				if (atual.name.includes(on.right.atribute)) {
+					expression = on.expression
+					break
+				}
+			}
+
+			let father = new No(
+				`⋈${expression}`
+			)
+
+			//father.setEsquerdo(comparator[Math.min(index, proxIndex)])
+			//father.setDireito(comparator[Math.max(index, proxIndex)])
+
+			father.setEsquerdo(comparator[index])
+			father.setDireito(comparator[proxIndex])
+
+			let projectionAttributes = []
+
+			projectionAttributes = atual.name.replaceAll("π", "").split(",")
+			projectionAttributes = projectionAttributes.concat(prox.name.replaceAll("π", "").split(","))
+
+			console.log("log", projectionAttributes)
+
+			for (let on of this.query.ON) {
+				if (expression == on.expression) {
+					if (projectionAttributes.includes(on.left.atribute)) {
+						if (!this.query.SELECT.includes(on.left.atribute)) {
+							let indexToRemove = projectionAttributes.indexOf(on.left.atribute)
+							projectionAttributes.splice(indexToRemove, 1)
+						}
+					}
+
+					if (projectionAttributes.includes(on.right.atribute)) {
+						if (!this.query.SELECT.includes(on.right.atribute)) {
+							let indexToRemove = projectionAttributes.indexOf(on.right.atribute)
+							projectionAttributes.splice(indexToRemove, 1)
+						}
+					}
+				}
+			}
+
+			let fatherProjection = new No(
+				`π${projectionAttributes.join(",")}`
+			)
+
+			fatherProjection.setEsquerdo(father)
+
+			father.setPai(fatherProjection)
+
+			comparator[index].setPai(father)
+			comparator[proxIndex].setPai(father)
+
+			comparator[Math.min(proxIndex, index)] = father
+			comparator.splice(Math.max(proxIndex, index), 1)
+
+			/*pairs = [];
+			pairs.push(father);*/
+			//comparator[Math.min(prox, index)].setOrder(++this.order);
+			return this.buildJunction(comparator, proxIndex, pairs)
+		}
+	}
+
+	startBuildJunction(comparator) {
+		console.log(`comparator`, comparator)
+		const index = this.getIndexBiggerPriority(comparator)
+		console.log(`index`, index)
+		return this.buildJunction(comparator, index, [])
+	}
+
+	getIndexBiggerPriority(array) {
+		let priorityIndex = 10
+		let priorityValue = 10
+		for (let i = 0; i < array.length; i++) {
+			if (array[i].priority < priorityValue) {
+				priorityIndex = i
+				priorityValue = array[i].priority
+			}
+		}
+		return priorityIndex
+	}
+
+	getTableAtributes(table, select) {
+		let atributes = new Set()
+
+		for (let i of select.split(',')) {
+			i = i.trim()
+
+			if (this.isAtributeFromTable(table, i)) {
+				atributes.add(i)
+			}
+		}
+
+		if (this.hasJoin) {
+			for (const on of this.query.ON) {
+				if (table == on.left.table) {
+					atributes.add(on.left.atribute)
+				} else if (table == on.right.table) {
+					atributes.add(on.right.atribute)
 				}
 			}
 		}
 
-		return currentLeaves[0]
-	}
-
-	buildTree(query) { }
-
-	printLeaves() {
-		for (let leave of this.leaves) {
-			console.log(leave, '-->');
-		}
-	}
-
-	getTableAtributes(table, select) {
-		let atributes = [];
-
-		for (let i of select.split(',')) {
-			i = i.trim();
-
-			if (this.isAtributeFromTable(table, i)) {
-				atributes.push(i);
-			}
-		}
-
-		return atributes;
+		return Array.from(atributes)
 	}
 
 	getTableSelections(table, WHERE) {
-		let selections = [];
+		let selections = []
 
 		for (let i of WHERE.atributes) {
 			if (this.isAtributeFromTable(table, i)) {
-				selections.push(WHERE.expressions[WHERE.atributes.indexOf(i)]);
+				selections.push(WHERE.expressions[WHERE.atributes.indexOf(i)])
 			}
 		}
 
-		return selections;
+		return selections
 	}
 
 	isAtributeFromTable(table, atribute) {
-		return databaseTable[table].includes(atribute);
+		return databaseTable[table].includes(atribute)
 	}
 }
 
 class No {
-	constructor(selecao, projecao, name) {
-		this.aresta = new Aresta(selecao, projecao);
-		this.name = name;
-		this.pai = null;
+	constructor(name) {
+		this.name = name
+		this.pai = null
 		this.esquerdo = null
 		this.direito = null
+		this.order = -1
+
+		if (name.startsWith('σ')) {
+			this.priority = operatorsPriority.indexOf(name.split(' ')[1])
+			return
+		}
+
+		this.priority = -1
+	}
+
+	setPriority(priority) {
+		this.priority = priority
+	}
+
+	getPriority() {
+		return this.priority
+	}
+
+	setOrder(order) {
+		this.order = order
+	}
+
+	getPai() {
+		return this.pai
 	}
 
 	setPai(no) {
-		this.pai = no;
+		this.pai = no
 	}
 
 	setEsquerdo(no) {
@@ -118,189 +259,141 @@ class No {
 	}
 }
 
-class Aresta {
-	constructor(selecao, projecao) {
-		this.selecao = selecao;
-		this.projecao = projecao;
-	}
-}
+//const teste = "SELECT IDUSUARIO, NOME, DATANASCIMENTO, DESCRICAO, SALDOINICIAL, UF, DESCRIÇÃO FROM USUARIO JOIN CONTAS ON USUARIO.IDUSUARIO = CONTAS.USUARIO_IDUSUARIO JOIN TIPOCONTA ON TIPOCONTA.IDTIPOCONTA = CONTAS.TIPOCONTA_IDTIPOCONTA WHERE SALDOINICIAL < 3000 AND UF = 'CE' AND DESCRIÇÃO <> 'CONTA CORRENTE'";
+//const teste = "SELECT NOME, DATANASCIMENTO, DESCRICAO, SALDOINICIAL FROM USUARIO JOIN CONTAS ON USUARIO.IDUSUARIO = CONTAS.USUARIO_IDUSUARIO WHERE SALDOINICIAL >= 235 AND UF = 'CE' AND CEP <> '62930000'";
+const teste = "SELECT IDUSUARIO, NOME, DATANASCIMENTO FROM USUARIO WHERE UF = 'CE' AND CEP <> '62930000'"
+//const teste = "SELECT LNAME FROM EMPLOYEE, WORKS_ON, PROJECT WHERE PNAME = ‘AQUARIUS’ AND PNUMBER = PNO AND ESSN = SSN AND BDATE > ‘1957-12-31’";
 
-let relationalAlgebraStrings = {
-	SELECT: function (body) {
-		return `π ${body}`;
-	},
-	JOIN: function (body, fromBody) {
-		let relationalBodyString = `${fromBody} ⋈ ${body['ON'][0]} ${body['JOIN'][0]}`;
-		//delete body['ON'][0];
-		//delete body['JOIN'][0];
+/*setTimeout(function() {
+	//container = document.getElementById("sigma-container")
+	//console.log("aa", container)
+  }, 5000);*/
 
-		body['JOIN'].forEach((joinValue, index) => {
-			const onValue = body['ON'][index];
+//const graph = new Graph();
 
-			relationalBodyString = `${relationalBodyString} ⋈ ${onValue} ${joinValue}`;
-		});
-
-		return `(${relationalBodyString})`;
-	},
-	WHERE: function (body) {
-		return `σ ${body} `;
-	}
-};
-
-/*function printTest() {
-	console.log(bodies);
-	console.log();
-	console.log(relationalAlgebraStrings['SELECT'](bodies['SELECT']));
-	console.log(relationalAlgebraStrings['WHERE'](bodies['WHERE']));
-
-	let joinAux = { JOIN: bodies['JOIN'], ON: bodies['ON'] };
-
-	console.log(relationalAlgebraStrings['JOIN'](joinAux, bodies['FROM']));
-}*/
-/*
-SELECT
-IDUSUARIO,
-NOME,
-DATANASCIMENTO,
-DESCRICAO,
-SALDOINICIAL,
-UF, 
-DESCRIÇÃO
-FROM USUARIO
-JOIN CONTAS ON USUARIO.IDUSUARIO = CONTAS.USUARIO_IDUSUARIO
-JOIN TIPOCONTA ON TIPOCONTA.IDTIPOCONTA = CONTAS.TIPOCONTA_IDTIPOCONTA
-WHERE SALDOINICIAL < 3000 AND UF = 'CE' AND DESCRIÇÃO <> 'CONTA CORRENTE'";
-*/
-
-/*
-"SELECT NOME, DATANASCIMENTO, DESCRICAO, SALDOINICIAL
-FROM USUARIO
-JOIN CONTAS ON USUARIO.IDUSUARIO = CONTAS.USUARIO_IDUSUARIO
-WHERE SALDOINICIAL >=235 AND UF ='CE' AND CEP <> '62930000'";
-*/
-
-/*
-SELECT LNAME
-FROM EMPLOYEE, WORKS_ON, PROJECT
-WHERE PNAME = ‘AQUARIUS’ AND
-PNUMBER = PNO AND ESSN = SSN AND
-BDATE > ‘1957-12-31’
-*/
-//printTest();
-const teste =
-	"SELECT IDUSUARIO, NOME, DATANASCIMENTO, DESCRICAO, SALDOINICIAL, UF, DESCRIÇÃO FROM USUARIO JOIN CONTAS ON USUARIO.IDUSUARIO = CONTAS.USUARIO_IDUSUARIO JOIN TIPOCONTA ON TIPOCONTA.IDTIPOCONTA = CONTAS.TIPOCONTA_IDTIPOCONTA WHERE SALDOINICIAL < 3000 AND UF <> 'CE' AND DESCRIÇÃO = 'CONTA CORRENTE'";
-// const teste =
-// 	"SELECT NOME, DATANASCIMENTO, DESCRICAO, SALDOINICIAL FROM USUARIO JOIN CONTAS ON USUARIO.IDUSUARIO = CONTAS.USUARIO_IDUSUARIO WHERE SALDOINICIAL >= 235 AND UF = 'CE' AND CEP <> '62930000'";
-// const teste =
-// 	"SELECT LNAME	FROM EMPLOYEE, WORKS_ON, PROJECT WHERE PNAME = ‘AQUARIUS’ AND PNUMBER = PNO AND ESSN = SSN AND BDATE > ‘1957-12-31’";
-
-// console.log('----------------------------------------------------------------');
-//console.log(queryBodies);
-
-export function generateGraphToPlot() {
+export function generateGraphToPlot(container) {
+	//console.log("aa", container)
 	const queryBodies = splitQueryIntoBodies(teste)
-	const tree = new TreeOptimizer(queryBodies)
-	let treeStructure = tree.buildJunction(tree.leaves)
+	const tree = new TreeOptimizer(queryBodies).tree
+	tree.name = `π${queryBodies.SELECT}`
+	getNodeData(tree)
+
+	console.log("test", queryBodies.SELECT)
 
 	console.log('DEBUG')
-	console.log("final --->", treeStructure)
+	console.log('Query bodies: ', queryBodies)
 	console.log()
-	let graph = getNodeData(treeStructure)
-	console.log(graph)
+	console.log("tree: ", tree)
 	console.log()
+	//console.log(graph)
+	console.log()
+
+	//const renderer = new Sigma(graph, container);
 
 	return graph
 }
 
 function getNodeData(No) {
-	let noData = [{
-		id: No.name,
-		parent: No.pai != null ? No.pai.name : "",
-		name: No.name,
-	}]
+	graph.addNode(No.name, { x: 0, y: 0, size: 10 });
 
-	if (No.esquerdo == null && No.direito == null) {
-		return noData
+	if (No.pai != null) {
+		graph.addEdge(No.name, No.pai.name);
 	}
 
-	noData = noData.concat(getNodeData(No.esquerdo))
-	noData = noData.concat(getNodeData(No.direito))
+	if (No.esquerdo != null) {
+		getNodeData(No.esquerdo)
+	}
 
-	return noData
+	if (No.direito != null) {
+		getNodeData(No.direito)
+	}
 }
 
-generateGraphToPlot()
+//generateGraphToPlot()
 
 export function splitQueryIntoBodies(query) {
-	let mySqlStringSplitted = query.split(' ');
+	let mySqlStringSplitted = query.split(' ')
 
-	let bodies = {};
+	let bodies = {}
 
-	let auxBody = '';
-	let keyWords = ['SELECT', 'FROM', 'JOIN', 'ON', 'WHERE'];
-	let auxKeyWord = '';
+	let auxBody = ''
+	let keyWords = ['SELECT', 'FROM', 'JOIN', 'ON', 'WHERE']
+	let auxKeyWord = ''
+	let hasJoin = false
 
 	for (let word of mySqlStringSplitted) {
 		if (keyWords.includes(word)) {
 			let auxBodyArray =
-				bodies[auxKeyWord] == undefined ? [] : bodies[auxKeyWord];
-			auxBodyArray.push(auxBody.trim());
+				bodies[auxKeyWord] == undefined ? [] : bodies[auxKeyWord]
+			auxBodyArray.push(auxBody.trim())
 
-			bodies[auxKeyWord] = auxBodyArray;
+			bodies[auxKeyWord] = auxBodyArray
 
-			auxKeyWord = word;
-			auxBody = '';
+			auxKeyWord = word
+			auxBody = ''
 		} else {
-			auxBody += word + ' ';
+			auxBody += word + ' '
 		}
 	}
 
-	bodies[auxKeyWord] = auxBody.trim();
+	bodies[auxKeyWord] = auxBody.trim()
 
 	Object.entries(bodies).forEach(([key, value]) => {
 		if (key != 'JOIN' && key != 'ON' && key != 'WHERE') {
-			bodies[key] = value[0];
+			bodies[key] = value[0]
 		}
-	});
+	})
 
-	Object.entries(bodies['ON']).forEach(([key, value]) => {
-		let contents = value.split('=');
-		let contentLeft = {};
-		let contentRight = {};
+	if (bodies['JOIN'] != undefined) {
+		hasJoin = true
+	}
 
-		if (contents[0].trim().split('.').length < 2) {
-			contentLeft = { table: ' ', atribute: contents[0].trim().split('.')[0] };
-			contentRight = { table: ' ', atribute: contents[1].trim().split('.')[0] };
-		} else {
-			contentLeft = {
-				table: contents[0].trim().split('.')[0],
-				atribute: contents[0].trim().split('.')[1]
-			};
-			contentRight = {
-				table: contents[1].trim().split('.')[0],
-				atribute: contents[1].trim().split('.')[1]
-			};
-		}
+	if (hasJoin) {
+		Object.entries(bodies['ON']).forEach(([key, value]) => {
+			let contents = value.split('=')
+			let contentLeft = {}
+			let contentRight = {}
 
-		bodies['ON'][key] = { left: contentLeft, right: contentRight, expression: value };
-	});
+			if (contents[0].trim().split('.').length < 2) {
+				contentLeft = { table: ' ', atribute: contents[0].trim().split('.')[0] }
+				contentRight = { table: ' ', atribute: contents[1].trim().split('.')[0] }
+			} else {
+				contentLeft = {
+					table: contents[0].trim().split('.')[0],
+					atribute: contents[0].trim().split('.')[1]
+				}
+				contentRight = {
+					table: contents[1].trim().split('.')[0],
+					atribute: contents[1].trim().split('.')[1]
+				}
+			}
 
-	let operatorsPriority = ['=', '<=', '>=', '<', '>', '<>'];
-	let expressions = bodies['WHERE'].split('AND');
+			bodies['ON'][key] = {
+				left: contentLeft,
+				right: contentRight,
+				expression: value
+			}
+		})
+	}
+
+	let expressions = bodies['WHERE'].split('AND')
 	let expressionsPriority = new Set()
 	let expressionsAtributesPriority = new Set()
-	let tables = [bodies["FROM"]].concat(bodies["JOIN"])
-	let tablesPriority = []
+	let tables = [bodies['FROM']]
+	let tablesPriority = new Set()
+
+	if (hasJoin) {
+		let tables = tables.concat(bodies['JOIN'])
+	}
 
 	for (let i of operatorsPriority) {
 		for (let j of expressions) {
-			// console.log('sera q tem ', i, ' no ', j, '?', j.includes(i))
 			if (j.includes(i)) {
-				expressionsPriority.add(j.trim());
+				expressionsPriority.add(j.trim())
 
-				let atribute = j.split(/(=|<|>|<>|<=|>=)/);
+				let atribute = j.split(/(=|<|>|<>|<=|>=)/)
 
-				expressionsAtributesPriority.add(atribute[0].trim());
+				expressionsAtributesPriority.add(atribute[0].trim())
 				//expressions.splice(expressions.indexOf(j), 1);
 			}
 		}
@@ -313,18 +406,18 @@ export function splitQueryIntoBodies(query) {
 		expression: bodies['WHERE'],
 		expressions: expressionsPriority,
 		atributes: expressionsAtributesPriority
-	};
+	}
 
-	bodies['WHERE']["atributes"].forEach((value, index) => {
+	bodies['WHERE']['atributes'].forEach((value, index) => {
 		for (let j of tables) {
 			if (databaseTable[j].includes(value)) {
-				tablesPriority.push(j)
+				tablesPriority.add(j)
 			}
 		}
 	})
 
-	bodies["tables"] = tablesPriority
+	bodies['tables'] = Array.from(tablesPriority)
 
-	delete bodies[''];
-	return bodies;
+	delete bodies['']
+	return bodies
 }

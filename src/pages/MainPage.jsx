@@ -64,8 +64,8 @@ export default function MainPage() {
 			},
 			node: {
 				backgroundColor: "rgba(0,0,0,0)",
-				width: '600%',
-      			//height: '100%',
+				//width: "600%",
+				//height: '100%',
 				hoverState: {
 					visible: false,
 				},
@@ -84,7 +84,11 @@ export default function MainPage() {
 				},
 			}, */
 		},
-		series: generateGraphToPlot(),
+		series: generateGraphToPlot()
+		/*series: {
+			values: generateGraphToPlot(),
+			backgroundColor: '#FFC107'
+		},*/
 	}
 
 	return (
@@ -109,7 +113,7 @@ export default function MainPage() {
 					{Boolean(error) && <h3 className="error-message">Erro: {error}</h3>}
 					{Boolean(result) && <div id="results-body">{result}</div>}
 					{
-						<div id="graph">
+						<div id="graphDiv">
 							<ZingChart data={chartConfig} />
 						</div>
 					}
