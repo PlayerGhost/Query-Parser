@@ -67,14 +67,14 @@ export class TreeOptimizer {
 
 	buildJunction(comparator, index, pairs) {
 		if (!comparator[index]) {
-			console.log('buildJunction tree leaves', comparator);
+			//console.log('buildJunction tree leaves', comparator);
 			comparator[0].setOrder(++this.order);
 			comparator[0].getPai().setOrder(++this.order);
 			return comparator[0].getPai();
 		}
 
 		if (comparator.length == 1) {
-			console.log('buildJunction tree', comparator);
+			//console.log('buildJunction tree', comparator);
 			comparator[0].setOrder(++this.order);
 			comparator[0].getPai().setOrder(++this.order);
 			return comparator[0].getPai();
@@ -124,7 +124,7 @@ export class TreeOptimizer {
 				prox.name.replaceAll('π', '').split(',')
 			);
 
-			console.log('log', projectionAttributes);
+			//console.log('log', projectionAttributes);
 
 			for (let on of this.query.ON) {
 				if (expression == on.expression) {
@@ -168,9 +168,9 @@ export class TreeOptimizer {
 	}
 
 	startBuildJunction(comparator) {
-		console.log(`comparator`, comparator);
+		//console.log(`comparator`, comparator);
 		const index = this.getIndexBiggerPriority(comparator);
-		console.log(`index`, index);
+		//console.log(`index`, index);
 		return this.buildJunction(comparator, index, []);
 	}
 
@@ -279,7 +279,7 @@ export class TreeOptimizer {
 		const prioritiesToFix = this.priorityArray
 			.slice(this.bottomNodes.length)
 			.map((x) => x.concat([true]));
-		console.log('aqui >>', prioritiesToFix);
+		//console.log('aqui >>', prioritiesToFix);
 
 		for (let table of this.bottomNodes) {
 			let currentNode = table;
@@ -373,10 +373,10 @@ class No {
 // const teste = "SELECT NOME, DATANASCIMENTO, DESCRICAO, SALDOINICIAL FROM USUARIO JOIN CONTAS ON USUARIO.IDUSUARIO = CONTAS.USUARIO_IDUSUARIO WHERE SALDOINICIAL >= 235 AND UF = 'CE' AND CEP <> '62930000'";
 // const teste = "SELECT IDUSUARIO, NOME, DATANASCIMENTO FROM USUARIO WHERE UF = 'CE' AND CEP <> '62930000'"
 // const teste = 'SELECT IDUSUARIO, NOME, DATANASCIMENTO FROM USUARIO'
-const teste = "SELECT IDUSUARIO, NOME FROM USUARIO JOIN CONTAS ON USUARIO.IDUSUARIO = CONTAS.USUARIO_IDUSUARIO JOIN TIPOCONTA ON TIPOCONTA.IDTIPOCONTA = CONTAS.TIPOCONTA_IDTIPOCONTA WHERE SALDOINICIAL < 3000 AND UF = 'CE' AND DESCRIÇÃO <> 'CONTA CORRENTE'"
+//const teste = "SELECT IDUSUARIO, NOME FROM USUARIO JOIN CONTAS ON USUARIO.IDUSUARIO = CONTAS.USUARIO_IDUSUARIO JOIN TIPOCONTA ON TIPOCONTA.IDTIPOCONTA = CONTAS.TIPOCONTA_IDTIPOCONTA WHERE SALDOINICIAL < 3000 AND UF = 'CE' AND DESCRIÇÃO <> 'CONTA CORRENTE'"
 // const teste = "SELECT IDUSUARIO FROM USUARIO JOIN CONTAS ON USUARIO.IDUSUARIO = CONTAS.USUARIO_IDUSUARIO JOIN TIPOCONTA ON TIPOCONTA.IDTIPOCONTA = CONTAS.TIPOCONTA_IDTIPOCONTA WHERE SALDOINICIAL < 3000 AND UF = 'CE' AND DESCRIÇÃO <> 'CONTA CORRENTE';";
 
-generateGraphToPlot(teste)
+//generateGraphToPlot(teste)
 
 function getOrderFromZingNodeName(node) {
 	return +node.name.split('(')[1].replace(')', '');
@@ -392,15 +392,14 @@ export function generateGraphToPlot(userQuery) {
 		return getOrderFromZingNodeName(a) - getOrderFromZingNodeName(b);
 	});
 
-	// console.log('aqui o grafo !!!!', graph);
-	// console.log('test', queryBodies.SELECT)
-
-	// console.log('DEBUG')
-	// console.log('Query bodies: ', queryBodies)
-	// console.log()
-	// console.log('tree: ', tree)
-	// console.log()
-	// console.log()
+	console.log('test', queryBodies.SELECT)
+	console.log('DEBUG')
+	console.log('Query bodies: ', queryBodies)
+	console.log()
+	console.log('tree: ', tree)
+	console.log()
+	console.log('grafo', graph);
+	console.log()
 
 	return graph;
 }
