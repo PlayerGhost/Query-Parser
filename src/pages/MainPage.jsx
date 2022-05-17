@@ -15,6 +15,7 @@ const ERROR_MESSAGE_TIMEOUT = 3000;
 export default function MainPage() {
 	const [query, setQuery] = useState('');
 	const [error, setError] = useState('');
+	//const [ok, setOk] = useState('');
 
 	const onClick = () => {
 		if (!query) {
@@ -118,7 +119,7 @@ export default function MainPage() {
 				<div className="results">
 					<h2>Resultado da consulta</h2>
 					{Boolean(error) && <h3 className="error-message">Erro: {error}</h3>}
-					<div id="graphDiv" className="graph--container"></div>
+					{ <div id="graphDiv" className="graph--container"></div>}
 				</div>
 			</section>
 		</div>
