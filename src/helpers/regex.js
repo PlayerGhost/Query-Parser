@@ -35,13 +35,13 @@
 
 const chars2 = '([A-ZÇÃÚ0-9._]+)';
 
-const select = `SELECT ([*]|(${chars2}))(,\\s?${chars2})* FROM ${chars2}`;
+const select = `SELECT ([*]|((${chars2})(,\\s*${chars2})*))\\s+FROM\\s+${chars2}`;
 
-const where = `WHERE ${chars2}\\s?((=|<=|<>|>=|<|>)\\s?((${chars2})|'(${chars2}\\s?)+'))( AND ${chars2}\\s?((=|<=|<>|>=|<|>)\\s?((${chars2})|'(${chars2}\\s?)+')))*`;
+const where = `WHERE\\s+${chars2}\\s*((=|<=|<>|>=|<|>)\\s*((${chars2})|'(${chars2}\\s*)+'))(\\s+AND\\s+${chars2}\\s*((=|<=|<>|>=|<|>)\\s*((${chars2})|'(${chars2}\\s*)+')))*`;
 
-const join = `JOIN ${chars2} ON ${chars2}\\s?=\\s?${chars2}`;
+const join = `JOIN\\s+${chars2}\\s+ON\\s+${chars2}\\s*=\\s*${chars2}`;
 
-const query = `^${select}\\s?(( ${where})?|( ${join})+?( ${where})?)?\\s?;$`;
+const query = `^${select}\\s*((\\s+${where})?|(\\s+${join})+?(\\s+${where})?)?\\s*;$`;
 //const query = `^${select}\\s?( ${where})\\s?;$`
 
 // export const regex = new RegExp(query, 'i');

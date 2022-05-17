@@ -7,6 +7,7 @@ export class TreeOptimizer {
 		this.query = query
 		this.leaves = []
 		this.bottomNodes = []
+		this.priorityArray = []
 		this.order = 0
 		this.hasJoin = false
 		this.hasWhere = false
@@ -22,6 +23,7 @@ export class TreeOptimizer {
 		this.setupTree()
 		this.setupBottomNodes()
 		this.calculateTreePriority()
+		this.getPriorityOrder()
 	}
 
 	setupTree() {
@@ -225,7 +227,6 @@ export class TreeOptimizer {
 	}
 
 	calculateTreePriority() {
-		const priorityArray = []
 
 		for (let table of this.bottomNodes) {
 			let currentNode = table
@@ -235,27 +236,53 @@ export class TreeOptimizer {
 					'π': 5 * currentNode.name.split(',').length,
 					'⋈': 10
 				}
-				const currentScore = currentNode.order + (operatorScore[currentNode.name[0]] || 0)
+				const currentScore =(operatorScore[currentNode.name[0]] || 0)
 				// priorityArray[currentScore] = priorityArray[currentScore] || [];
+                
+				currentNode.order = currentScore
 
-				if (!priorityArray.map(x => x[0]).includes(currentNode.name)) {
-					priorityArray.push([currentNode.name, currentScore])
-				} else {
-					const existingIndex = priorityArray.map(x => x[0]).indexOf(currentNode.name)
-					priorityArray[existingIndex][1] = Math.max(priorityArray[existingIndex][1], currentScore)
+				if(currentNode.esquerdo != null){
+                      currentNode.order+=currentNode.esquerdo.order
 				}
 
-				if (currentNode.pai) {
-					currentNode.pai.order += currentScore
+				if(currentNode.direito != null){
+					currentNode.order+=currentNode.direito.order
+				}
+
+				if (!this.priorityArray.map(x => x[0]).includes(currentNode.name)) {
+					this.priorityArray.push([currentNode.name, currentNode.order])
+				} else {
+					const existingIndex = this.priorityArray.map(x => x[0]).indexOf(currentNode.name)
+					this.priorityArray[existingIndex][1] = Math.max(this.priorityArray[existingIndex][1], currentNode.order)
 				}
 
 				currentNode = currentNode.pai
 			}
 		}
 
-		priorityArray.sort((a, b) => (a[1] - b[1]))
-		console.log('aqui ó', priorityArray)
+		this.priorityArray.sort((a, b) => (a[1] - b[1]))
+		console.log('aqui ó', this.priorityArray)
+		
 	}
+
+	getPriorityOrder() {
+
+		this.priorityArray = this.priorityArray.slice(this.bottomNodes.length)
+		console.log('aqui ó', this.priorityArray)
+
+		for (let table of this.bottomNodes) {
+			let currentNode = table
+			while (currentNode != null) {
+
+				const existingIndex = this.priorityArray.map(x => x[0]).indexOf(currentNode.name)
+				currentNode.order = existingIndex + 1
+         
+				currentNode = currentNode.pai
+			}
+		}
+	}
+
+
 
 	setupBottomNodes() {
 		this.bottomNodes = []
@@ -335,12 +362,12 @@ class No {
 }
 
 
-//const teste = "SELECT IDUSUARIO, NOME, DATANASCIMENTO, DESCRICAO, SALDOINICIAL, UF, DESCRIÇÃO FROM USUARIO JOIN CONTAS ON USUARIO.IDUSUARIO = CONTAS.USUARIO_IDUSUARIO JOIN TIPOCONTA ON TIPOCONTA.IDTIPOCONTA = CONTAS.TIPOCONTA_IDTIPOCONTA WHERE SALDOINICIAL < 3000 AND UF = 'CE' AND DESCRIÇÃO <> 'CONTA CORRENTE'";
+const teste = "SELECT IDUSUARIO, NOME, DATANASCIMENTO, DESCRICAO, SALDOINICIAL, UF, DESCRIÇÃO FROM USUARIO JOIN CONTAS ON USUARIO.IDUSUARIO = CONTAS.USUARIO_IDUSUARIO JOIN TIPOCONTA ON TIPOCONTA.IDTIPOCONTA = CONTAS.TIPOCONTA_IDTIPOCONTA WHERE SALDOINICIAL < 3000 AND UF = 'CE' AND DESCRIÇÃO <> 'CONTA CORRENTE'";
 //const teste = "SELECT NOME, DATANASCIMENTO, DESCRICAO, SALDOINICIAL FROM USUARIO JOIN CONTAS ON USUARIO.IDUSUARIO = CONTAS.USUARIO_IDUSUARIO WHERE SALDOINICIAL >= 235 AND UF = 'CE' AND CEP <> '62930000'";
 //const teste = "SELECT IDUSUARIO, NOME, DATANASCIMENTO FROM USUARIO WHERE UF = 'CE' AND CEP <> '62930000'"
 //const teste = 'SELECT IDUSUARIO, NOME, DATANASCIMENTO FROM USUARIO'
 
-//generateGraphToPlot(teste)
+generateGraphToPlot(teste)
 export function generateGraphToPlot(userQuery) {
 	const queryBodies = splitQueryIntoBodies(userQuery)
 	const tree = new TreeOptimizer(queryBodies).tree
