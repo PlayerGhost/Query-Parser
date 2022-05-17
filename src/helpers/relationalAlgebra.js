@@ -4,24 +4,24 @@ let operatorsPriority = ['=', '<=', '>=', '<', '>', '<>']
 
 export class TreeOptimizer {
 	constructor(query) {
-		this.query = query;
-		this.leaves = [];
-		this.bottomNodes = [];
-		this.order = 0;
-		this.hasJoin = false;
+		this.query = query
+		this.leaves = []
+		this.bottomNodes = []
+		this.order = 0
+		this.hasJoin = false
 		this.hasWhere = false
 
 		if (this.query.JOIN != undefined) {
 			this.hasJoin = true
 		}
-		
+
 		if (this.query.WHERE != undefined) {
 			this.hasWhere = true
 		}
 
-		this.setupTree();
-    this.setupBottomNodes();
-		this.calculateTreePriority();
+		this.setupTree()
+		this.setupBottomNodes()
+		this.calculateTreePriority()
 	}
 
 	setupTree() {
@@ -227,19 +227,19 @@ export class TreeOptimizer {
 	calculateTreePriority() {
 		const priorityArray = []
 
-		for(let table of this.bottomNodes) {
+		for (let table of this.bottomNodes) {
 			let currentNode = table
 			while (currentNode != null) {
 				const operatorScore = {
 					'σ': 1,
 					'π': 5 * currentNode.name.split(',').length,
 					'⋈': 10
-				};
-				const currentScore = currentNode.order + (operatorScore[currentNode.name[0]] || 0);
+				}
+				const currentScore = currentNode.order + (operatorScore[currentNode.name[0]] || 0)
 				// priorityArray[currentScore] = priorityArray[currentScore] || [];
 
 				if (!priorityArray.map(x => x[0]).includes(currentNode.name)) {
-					priorityArray.push([currentNode.name, currentScore]);
+					priorityArray.push([currentNode.name, currentScore])
 				} else {
 					const existingIndex = priorityArray.map(x => x[0]).indexOf(currentNode.name)
 					priorityArray[existingIndex][1] = Math.max(priorityArray[existingIndex][1], currentScore)
@@ -253,16 +253,16 @@ export class TreeOptimizer {
 			}
 		}
 
-		priorityArray.sort((a, b )=> (a[1] - b[1]))
+		priorityArray.sort((a, b) => (a[1] - b[1]))
 		console.log('aqui ó', priorityArray)
 	}
 
 	setupBottomNodes() {
 		this.bottomNodes = []
-		this.lookForBottomNode(this.tree);
+		this.lookForBottomNode(this.tree)
 		this.bottomNodes = this.bottomNodes.filter(
 			(n) => n.esquerdo == n.direito && n.direito == null
-		);
+		)
 	}
 
 	lookForBottomNode(currentNode) {
@@ -289,11 +289,11 @@ export class TreeOptimizer {
 
 class No {
 	constructor(name) {
-		this.name = name;
-		this.pai = null;
-		this.esquerdo = null;
-		this.direito = null;
-		this.order = 0;
+		this.name = name
+		this.pai = null
+		this.esquerdo = null
+		this.direito = null
+		this.order = 0
 
 		if (name.startsWith('σ')) {
 			this.priority = operatorsPriority.indexOf(name.split(' ')[1])
