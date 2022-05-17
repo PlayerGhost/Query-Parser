@@ -1,127 +1,130 @@
-import { databaseTable } from './db.js'
+import { databaseTable } from './db.js';
 
-let operatorsPriority = ['=', '<=', '>=', '<', '>', '<>']
+let operatorsPriority = ['=', '<=', '>=', '<', '>', '<>'];
 
 export class TreeOptimizer {
 	constructor(query) {
-		this.query = query
-		this.leaves = []
-		this.bottomNodes = []
-		this.priorityArray = []
-		this.order = 0
-		this.hasJoin = false
-		this.hasWhere = false
+		this.query = query;
+		this.leaves = [];
+		this.bottomNodes = [];
+		this.priorityArray = [];
+		this.order = 0;
+		this.hasJoin = false;
+		this.hasWhere = false;
 
 		if (this.query.JOIN != undefined) {
-			this.hasJoin = true
+			this.hasJoin = true;
 		}
 
 		if (this.query.WHERE != undefined) {
-			this.hasWhere = true
+			this.hasWhere = true;
 		}
 
-		this.setupTree()
-		this.setupBottomNodes()
-		this.calculateTreePriority()
-		this.getPriorityOrder()
+		this.setupTree();
+		this.setupBottomNodes();
 	}
 
 	setupTree() {
 		for (let table of this.query.tables) {
-			let tableNode = new No(table)
-			this.leaves.push(tableNode)
+			let tableNode = new No(table);
+			this.leaves.push(tableNode);
 
 			if (this.hasWhere) {
-				let selections = this.getTableSelections(table, this.query.WHERE)
+				let selections = this.getTableSelections(table, this.query.WHERE);
 
 				for (let selec of selections) {
-					let paiTableNode = new No('σ' + selec)
-					tableNode.setPai(paiTableNode)
-					paiTableNode.setEsquerdo(tableNode)
+					let paiTableNode = new No('σ' + selec);
+					tableNode.setPai(paiTableNode);
+					paiTableNode.setEsquerdo(tableNode);
 
-					tableNode = tableNode.getPai()
+					tableNode = tableNode.getPai();
 				}
 			}
 
 			let tableNodePai = new No(
 				'π' + this.getTableAtributes(table, this.query.SELECT)
-			)
+			);
 
-			tableNode.setPai(tableNodePai)
-			tableNodePai.setEsquerdo(tableNode)
+			tableNode.setPai(tableNodePai);
+			tableNodePai.setEsquerdo(tableNode);
 		}
 
 		if (this.hasJoin) {
-			this.tree = this.startBuildJunction(this.leaves)
-			return
+			this.tree = this.startBuildJunction(this.leaves);
+			return;
 		}
 
-		this.tree = this.buildTreeSelect(this.leaves[0])
+		this.tree = this.buildTreeSelect(this.leaves[0]);
 	}
 
 	buildTreeSelect(No) {
 		if (No.pai != null) {
-			return this.buildTreeSelect(No.pai)
+			return this.buildTreeSelect(No.pai);
 		} else {
-			return No
+			return No;
 		}
 	}
 
 	buildJunction(comparator, index, pairs) {
 		if (!comparator[index]) {
-			console.log('buildJunction tree leaves', comparator)
-			return comparator[0].getPai()
+			console.log('buildJunction tree leaves', comparator);
+			comparator[0].setOrder(++this.order);
+			comparator[0].getPai().setOrder(++this.order);
+			return comparator[0].getPai();
 		}
 
 		if (comparator.length == 1) {
-			console.log('buildJunction tree', comparator)
-			return comparator[0].getPai()
+			console.log('buildJunction tree', comparator);
+			comparator[0].setOrder(++this.order);
+			comparator[0].getPai().setOrder(++this.order);
+			return comparator[0].getPai();
 		}
 
-		let proxIndex = index == comparator.length - 1 ? index - 1 : index + 1
+		let proxIndex = index == comparator.length - 1 ? index - 1 : index + 1;
 
 		if (comparator[index].getPai()) {
-			comparator[index] = comparator[index].getPai()
-			//comparator[index].setOrder(++this.order);
+			comparator[index].setOrder(++this.order);
+			comparator[index].getPai().setOrder(++this.order);
+			comparator[index] = comparator[index].getPai();
 
 			if (comparator[proxIndex].getPai()) {
-				comparator[proxIndex] = comparator[proxIndex].getPai()
+				comparator[proxIndex].setOrder(++this.order);
+				comparator[proxIndex].getPai().setOrder(++this.order);
+				comparator[proxIndex] = comparator[proxIndex].getPai();
 			}
 
-			return this.buildJunction(comparator, index, pairs)
+			return this.buildJunction(comparator, index, pairs);
 		} else {
-			let atual = comparator[index]
-			let prox = comparator[proxIndex]
+			let atual = comparator[index];
+			let prox = comparator[proxIndex];
 
-			let expression = ''
+			let expression = '';
 
 			for (const on of this.query.ON) {
 				if (atual.name.includes(on.left.atribute)) {
-					expression = on.expression
-					break
+					expression = on.expression;
+					break;
 				}
 
 				if (atual.name.includes(on.right.atribute)) {
-					expression = on.expression
-					break
+					expression = on.expression;
+					break;
 				}
 			}
 
-			let father = new No(`⋈${expression}`)
+			let father = new No(`⋈${expression}`);
 
-			father.setEsquerdo(comparator[Math.min(index, proxIndex)])
-			father.setDireito(comparator[Math.max(index, proxIndex)])
-			//father.setEsquerdo(comparator[index])
-			//father.setDireito(comparator[proxIndex])
+			father.setEsquerdo(comparator[Math.min(index, proxIndex)]);
+			father.setDireito(comparator[Math.max(index, proxIndex)]);
 
-			let projectionAttributes = []
+			let projectionAttributes = [];
 
-			projectionAttributes = atual.name.replaceAll('π', '').split(',')
+			projectionAttributes = atual.name.replaceAll('π', '').split(',');
 			projectionAttributes = projectionAttributes.concat(
 				prox.name.replaceAll('π', '').split(',')
-			)
+			);
 
-			console.log('log', projectionAttributes)
+			console.log('log', projectionAttributes);
 
 			for (let on of this.query.ON) {
 				if (expression == on.expression) {
@@ -129,8 +132,8 @@ export class TreeOptimizer {
 						if (!this.query.SELECT.includes(on.left.atribute)) {
 							let indexToRemove = projectionAttributes.indexOf(
 								on.left.atribute
-							)
-							projectionAttributes.splice(indexToRemove, 1)
+							);
+							projectionAttributes.splice(indexToRemove, 1);
 						}
 					}
 
@@ -138,253 +141,268 @@ export class TreeOptimizer {
 						if (!this.query.SELECT.includes(on.right.atribute)) {
 							let indexToRemove = projectionAttributes.indexOf(
 								on.right.atribute
-							)
-							projectionAttributes.splice(indexToRemove, 1)
+							);
+							projectionAttributes.splice(indexToRemove, 1);
 						}
 					}
 				}
 			}
 
-			let fatherProjection = new No(`π${projectionAttributes.join(',')}`)
+			let fatherProjection = new No(`π${projectionAttributes.join(',')}`);
 
-			fatherProjection.setEsquerdo(father)
+			fatherProjection.setEsquerdo(father);
 
-			father.setPai(fatherProjection)
+			father.setPai(fatherProjection);
 
-			comparator[index].setPai(father)
-			comparator[proxIndex].setPai(father)
+			comparator[index].setPai(father);
+			comparator[proxIndex].setPai(father);
 
-			comparator[Math.min(proxIndex, index)] = father
-			comparator.splice(Math.max(proxIndex, index), 1)
+			comparator[Math.min(proxIndex, index)] = father;
+			comparator.splice(Math.max(proxIndex, index), 1);
 
 			/*pairs = [];
 			pairs.push(father);*/
 			//comparator[Math.min(prox, index)].setOrder(++this.order);
-			return this.buildJunction(comparator, proxIndex, pairs)
+			return this.buildJunction(comparator, proxIndex, pairs);
 		}
 	}
 
 	startBuildJunction(comparator) {
-		console.log(`comparator`, comparator)
-		const index = this.getIndexBiggerPriority(comparator)
-		console.log(`index`, index)
-		return this.buildJunction(comparator, index, [])
+		console.log(`comparator`, comparator);
+		const index = this.getIndexBiggerPriority(comparator);
+		console.log(`index`, index);
+		return this.buildJunction(comparator, index, []);
 	}
 
 	getIndexBiggerPriority(array) {
-		let priorityIndex = 10
-		let priorityValue = 10
+		let priorityIndex = 10;
+		let priorityValue = 10;
 		for (let i = 0; i < array.length; i++) {
 			if (
 				array[i].pai.priority < priorityValue &&
 				array[i].pai.priority != -1
 			) {
-				priorityIndex = i
-				priorityValue = array[i].pai.priority
+				priorityIndex = i;
+				priorityValue = array[i].pai.priority;
 			}
 		}
-		return priorityIndex
+		return priorityIndex;
 	}
 
 	getTableAtributes(table, select) {
-		let atributes = new Set()
+		let atributes = new Set();
 
 		for (let i of select.split(',')) {
-			i = i.trim()
+			i = i.trim();
 
 			if (this.isAtributeFromTable(table, i)) {
-				atributes.add(i)
+				atributes.add(i);
 			}
 		}
 
 		if (this.hasJoin) {
 			for (const on of this.query.ON) {
 				if (table == on.left.table) {
-					atributes.add(on.left.atribute)
+					atributes.add(on.left.atribute);
 				} else if (table == on.right.table) {
-					atributes.add(on.right.atribute)
+					atributes.add(on.right.atribute);
 				}
 			}
 		}
 
-		return Array.from(atributes)
+		return Array.from(atributes);
 	}
 
 	getTableSelections(table, WHERE) {
-		let selections = []
+		let selections = [];
 
 		for (let i of WHERE.atributes) {
 			if (this.isAtributeFromTable(table, i)) {
-				selections.push(WHERE.expressions[WHERE.atributes.indexOf(i)])
+				selections.push(WHERE.expressions[WHERE.atributes.indexOf(i)]);
 			}
 		}
 
-		return selections
+		return selections;
 	}
 
 	isAtributeFromTable(table, atribute) {
-		return databaseTable[table].includes(atribute)
+		return databaseTable[table].includes(atribute);
 	}
 
 	calculateTreePriority() {
-
+		this.priorityArray = [];
 		for (let table of this.bottomNodes) {
-			let currentNode = table
+			let currentNode = table;
 			while (currentNode != null) {
-				const operatorScore = {
-					'σ': 1,
-					'π': 5 * currentNode.name.split(',').length,
-					'⋈': 10
-				}
-				const currentScore =(operatorScore[currentNode.name[0]] || 0)
+				// const operatorScore = {
+				// 	σ: 1,
+				// 	π: 5 * currentNode.name.split(',').length,
+				// 	'⋈': 10
+				// };
+				// const currentScore = operatorScore[currentNode.name[0]] || 0;
 				// priorityArray[currentScore] = priorityArray[currentScore] || [];
-                
-				currentNode.order = currentScore
 
-				if(currentNode.esquerdo != null){
-                      currentNode.order+=currentNode.esquerdo.order
-				}
+				// currentNode.order = currentScore;
 
-				if(currentNode.direito != null){
-					currentNode.order+=currentNode.direito.order
-				}
+				// if (currentNode.esquerdo != null) {
+				// 	currentNode.order += currentNode.esquerdo.order;
+				// }
 
-				if (!this.priorityArray.map(x => x[0]).includes(currentNode.name)) {
-					this.priorityArray.push([currentNode.name, currentNode.order])
+				// if (currentNode.direito != null) {
+				// 	currentNode.order += currentNode.direito.order;
+				// }
+
+				// if (!this.priorityArray.map((x) => x[0]).includes(currentNode.name)) {
+				// 	this.priorityArray.push([currentNode.name, currentNode.order]);
+				// } else {
+				const existingIndex = this.priorityArray
+					.map((x) => x[0])
+					.indexOf(currentNode.name);
+
+				if (existingIndex != -1) {
+					this.priorityArray[existingIndex][1] = Math.max(
+						this.priorityArray[existingIndex][1],
+						currentNode.order
+					);
 				} else {
-					const existingIndex = this.priorityArray.map(x => x[0]).indexOf(currentNode.name)
-					this.priorityArray[existingIndex][1] = Math.max(this.priorityArray[existingIndex][1], currentNode.order)
+					this.priorityArray.push([currentNode.name, currentNode.order]);
 				}
 
-				currentNode = currentNode.pai
+				currentNode = currentNode.pai;
 			}
 		}
 
-		this.priorityArray.sort((a, b) => (a[1] - b[1]))
-		console.log('aqui ó', this.priorityArray)
-		
+		this.priorityArray.sort((a, b) => a[1] - b[1]);
 	}
 
 	getPriorityOrder() {
-
-		this.priorityArray = this.priorityArray.slice(this.bottomNodes.length)
-		console.log('aqui ó', this.priorityArray)
+		const prioritiesToFix = this.priorityArray
+			.slice(this.bottomNodes.length)
+			.map((x) => x.concat([true]));
+		console.log('aqui >>', prioritiesToFix);
 
 		for (let table of this.bottomNodes) {
-			let currentNode = table
+			let currentNode = table;
 			while (currentNode != null) {
+				const existingIndex = prioritiesToFix
+					.filter((x) => x[2])
+					.map((x) => x[0])
+					.indexOf(currentNode.name);
+				
+					if (existingIndex != -1) {
+						currentNode.order = existingIndex + 1;
+						prioritiesToFix[existingIndex][2] = false;
+					}
 
-				const existingIndex = this.priorityArray.map(x => x[0]).indexOf(currentNode.name)
-				currentNode.order = existingIndex + 1
-         
-				currentNode = currentNode.pai
+					currentNode = currentNode.pai;
 			}
 		}
 	}
 
-
-
 	setupBottomNodes() {
-		this.bottomNodes = []
-		this.lookForBottomNode(this.tree)
+		this.bottomNodes = [];
+		this.lookForBottomNode(this.tree);
 		this.bottomNodes = this.bottomNodes.filter(
 			(n) => n.esquerdo == n.direito && n.direito == null
-		)
+		);
 	}
 
 	lookForBottomNode(currentNode) {
-		if (currentNode == null) return
+		if (currentNode == null) return;
 
 		if (currentNode.esquerdo != null) {
-			this.lookForBottomNode(currentNode.esquerdo)
+			this.lookForBottomNode(currentNode.esquerdo);
 		}
 
-		this.bottomNodes.push(currentNode)
+		this.bottomNodes.push(currentNode);
 
 		if (currentNode.direito != null) {
-			this.lookForBottomNode(currentNode.direito)
+			this.lookForBottomNode(currentNode.direito);
 		}
 	}
-
-	// calculateNodePriority(currentNode, isGoingDown, accumulatedScore) {
-	// 	if (currentNode == null) return accumulatedScore
-	// 	if (isGoingDown) {
-	// 		return calcu
-	// 	}
-	// }
 }
 
 class No {
 	constructor(name) {
-		this.name = name
-		this.pai = null
-		this.esquerdo = null
-		this.direito = null
-		this.order = 0
+		this.name = name;
+		this.pai = null;
+		this.esquerdo = null;
+		this.direito = null;
+		this.order = 0;
 
 		if (name.startsWith('σ')) {
-			this.priority = operatorsPriority.indexOf(name.split(' ')[1])
-			return
+			this.priority = operatorsPriority.indexOf(name.split(' ')[1]);
+			return;
 		}
 
-		this.priority = -1
+		this.priority = -1;
 	}
 
 	setPriority(priority) {
-		this.priority = priority
+		this.priority = priority;
 	}
 
 	getPriority() {
-		return this.priority
+		return this.priority;
 	}
 
 	setOrder(order) {
-		this.order = order
+		this.order = order;
 	}
 
 	getPai() {
-		return this.pai
+		return this.pai;
 	}
 
 	setPai(no) {
-		this.pai = no
+		this.pai = no;
 	}
 
 	setEsquerdo(no) {
-		if (no == this) return
-		this.esquerdo = no
+		if (no == this) return;
+		this.esquerdo = no;
 	}
 
 	setDireito(no) {
-		if (no == this) return
-		this.direito = no
+		if (no == this) return;
+		this.direito = no;
 	}
 }
 
-
-const teste = "SELECT IDUSUARIO, NOME, DATANASCIMENTO, DESCRICAO, SALDOINICIAL, UF, DESCRIÇÃO FROM USUARIO JOIN CONTAS ON USUARIO.IDUSUARIO = CONTAS.USUARIO_IDUSUARIO JOIN TIPOCONTA ON TIPOCONTA.IDTIPOCONTA = CONTAS.TIPOCONTA_IDTIPOCONTA WHERE SALDOINICIAL < 3000 AND UF = 'CE' AND DESCRIÇÃO <> 'CONTA CORRENTE'";
-//const teste = "SELECT NOME, DATANASCIMENTO, DESCRICAO, SALDOINICIAL FROM USUARIO JOIN CONTAS ON USUARIO.IDUSUARIO = CONTAS.USUARIO_IDUSUARIO WHERE SALDOINICIAL >= 235 AND UF = 'CE' AND CEP <> '62930000'";
-//const teste = "SELECT IDUSUARIO, NOME, DATANASCIMENTO FROM USUARIO WHERE UF = 'CE' AND CEP <> '62930000'"
-//const teste = 'SELECT IDUSUARIO, NOME, DATANASCIMENTO FROM USUARIO'
+// const teste = "SELECT IDUSUARIO, NOME, DATANASCIMENTO, DESCRICAO, SALDOINICIAL, UF, DESCRIÇÃO FROM USUARIO JOIN CONTAS ON USUARIO.IDUSUARIO = CONTAS.USUARIO_IDUSUARIO JOIN TIPOCONTA ON TIPOCONTA.IDTIPOCONTA = CONTAS.TIPOCONTA_IDTIPOCONTA WHERE SALDOINICIAL < 3000 AND UF = 'CE' AND DESCRIÇÃO <> 'CONTA CORRENTE'";
+// const teste = "SELECT NOME, DATANASCIMENTO, DESCRICAO, SALDOINICIAL FROM USUARIO JOIN CONTAS ON USUARIO.IDUSUARIO = CONTAS.USUARIO_IDUSUARIO WHERE SALDOINICIAL >= 235 AND UF = 'CE' AND CEP <> '62930000'";
+// const teste = "SELECT IDUSUARIO, NOME, DATANASCIMENTO FROM USUARIO WHERE UF = 'CE' AND CEP <> '62930000'"
+// const teste = 'SELECT IDUSUARIO, NOME, DATANASCIMENTO FROM USUARIO'
+const teste = "SELECT IDUSUARIO, NOME FROM USUARIO JOIN CONTAS ON USUARIO.IDUSUARIO = CONTAS.USUARIO_IDUSUARIO JOIN TIPOCONTA ON TIPOCONTA.IDTIPOCONTA = CONTAS.TIPOCONTA_IDTIPOCONTA WHERE SALDOINICIAL < 3000 AND UF = 'CE' AND DESCRIÇÃO <> 'CONTA CORRENTE'"
+// const teste = "SELECT IDUSUARIO FROM USUARIO JOIN CONTAS ON USUARIO.IDUSUARIO = CONTAS.USUARIO_IDUSUARIO JOIN TIPOCONTA ON TIPOCONTA.IDTIPOCONTA = CONTAS.TIPOCONTA_IDTIPOCONTA WHERE SALDOINICIAL < 3000 AND UF = 'CE' AND DESCRIÇÃO <> 'CONTA CORRENTE';";
 
 generateGraphToPlot(teste)
+
+function getOrderFromZingNodeName(node) {
+	return +node.name.split('(')[1].replace(')', '');
+}
+
 export function generateGraphToPlot(userQuery) {
-	const queryBodies = splitQueryIntoBodies(userQuery)
-	const tree = new TreeOptimizer(queryBodies).tree
-	tree.name = `π${queryBodies.SELECT}`
-	let graph = getNodeData(tree)
+	const queryBodies = splitQueryIntoBodies(userQuery);
+	const tree = new TreeOptimizer(queryBodies).tree;
+	tree.name = `π${queryBodies.SELECT}`;
+	let graph = getNodeData(tree);
+	// console.log('aqui o grafo !!!!', graph);
+	graph.sort((a, b) => {
+		return getOrderFromZingNodeName(a) - getOrderFromZingNodeName(b);
+	});
 
-	console.log('test', queryBodies.SELECT)
+	// console.log('aqui o grafo !!!!', graph);
+	// console.log('test', queryBodies.SELECT)
 
-	console.log('DEBUG')
-	console.log('Query bodies: ', queryBodies)
-	console.log()
-	console.log('tree: ', tree)
-	console.log()
-	console.log('graphStructure: ', graph)
-	console.log()
+	// console.log('DEBUG')
+	// console.log('Query bodies: ', queryBodies)
+	// console.log()
+	// console.log('tree: ', tree)
+	// console.log()
+	// console.log()
 
-	return graph
+	return graph;
 }
 
 function getNodeData(No) {
@@ -392,152 +410,151 @@ function getNodeData(No) {
 		{
 			id: No.name,
 			parent: No.pai != null ? No.pai.name : '',
-			name: `${No.name} (${No.order})`
+			name: `${No.name} (${!No.name.match(/^[a-z]+$/i) ? No.order : 'BASE'})`
 		}
-	]
+	];
 
 	if (No.esquerdo != null) {
-		noData = noData.concat(getNodeData(No.esquerdo))
+		noData = noData.concat(getNodeData(No.esquerdo));
 	}
 
 	if (No.direito != null) {
-		noData = noData.concat(getNodeData(No.direito))
+		noData = noData.concat(getNodeData(No.direito));
 	}
 
-	return noData
+	return noData;
 }
 
-//generateGraphToPlot()
-
 export function splitQueryIntoBodies(query) {
-	let mySqlStringSplitted = query.split(' ')
+	let mySqlStringSplitted = query.split(' ');
 
-	let bodies = {}
+	let bodies = {};
 
-	let auxBody = ''
-	let keyWords = ['SELECT', 'FROM', 'JOIN', 'ON', 'WHERE']
-	let auxKeyWord = ''
-	let hasJoin = false
-	let hasWhere = false
+	let auxBody = '';
+	let keyWords = ['SELECT', 'FROM', 'JOIN', 'ON', 'WHERE'];
+	let auxKeyWord = '';
+	let hasJoin = false;
+	let hasWhere = false;
 
 	for (let word of mySqlStringSplitted) {
 		if (keyWords.includes(word)) {
-			let auxBodyArray = bodies[auxKeyWord] == undefined ? [] : bodies[auxKeyWord]
-			auxBodyArray.push(auxBody.trim())
+			let auxBodyArray =
+				bodies[auxKeyWord] == undefined ? [] : bodies[auxKeyWord];
+			auxBodyArray.push(auxBody.trim());
 
-			bodies[auxKeyWord] = auxBodyArray
+			bodies[auxKeyWord] = auxBodyArray;
 
-			auxKeyWord = word
-			auxBody = ''
+			auxKeyWord = word;
+			auxBody = '';
 		} else {
-			auxBody += word + ' '
+			auxBody += word + ' ';
 		}
 	}
 
-	bodies[auxKeyWord] = auxBody.trim()
+	bodies[auxKeyWord] = auxBody.trim();
 
 	if (bodies['WHERE'] != undefined) {
-		hasWhere = true
+		hasWhere = true;
 	}
 
 	Object.entries(bodies).forEach(([key, value]) => {
 		if (key != 'JOIN' && key != 'ON' && key != 'WHERE') {
 			if (!hasWhere) {
 				if (key != 'FROM') {
-					bodies[key] = value[0]
+					bodies[key] = value[0];
 				}
 			} else {
-				bodies[key] = value[0]
+				bodies[key] = value[0];
 			}
 		}
-	})
+	});
 
 	if (bodies['JOIN'] != undefined) {
-		hasJoin = true
+		hasJoin = true;
 	}
 
 	if (hasJoin) {
 		Object.entries(bodies['ON']).forEach(([key, value]) => {
-			let contents = value.split('=')
-			let contentLeft = {}
-			let contentRight = {}
+			let contents = value.split('=');
+			let contentLeft = {};
+			let contentRight = {};
 
 			if (contents[0].trim().split('.').length < 2) {
 				contentLeft = {
 					table: ' ',
 					atribute: contents[0].trim().split('.')[0]
-				}
+				};
 				contentRight = {
 					table: ' ',
 					atribute: contents[1].trim().split('.')[0]
-				}
+				};
 			} else {
 				contentLeft = {
 					table: contents[0].trim().split('.')[0],
 					atribute: contents[0].trim().split('.')[1]
-				}
+				};
 				contentRight = {
 					table: contents[1].trim().split('.')[0],
 					atribute: contents[1].trim().split('.')[1]
-				}
+				};
 			}
 
 			bodies['ON'][key] = {
 				left: contentLeft,
 				right: contentRight,
 				expression: value
-			}
-		})
+			};
+		});
 	}
 
-	let tables = [bodies['FROM']]
+	let tables = [bodies['FROM']];
 
 	if (hasWhere) {
-		let expressions = bodies['WHERE'].split('AND')
-		let expressionsPriority = new Set()
-		let expressionsAtributesPriority = new Set()
+		let expressions = bodies['WHERE'].split('AND');
+		let expressionsPriority = new Set();
+		let expressionsAtributesPriority = new Set();
 
-		let tablesPriority = new Set()
+		let tablesPriority = new Set();
 
 		if (hasJoin) {
-			tables = tables.concat(bodies['JOIN'])
+			tables = tables.concat(bodies['JOIN']);
 		}
 
 		for (let i of operatorsPriority) {
 			for (let j of expressions) {
 				if (j.includes(i)) {
-					expressionsPriority.add(j.trim())
+					expressionsPriority.add(j.trim());
 
-					let atribute = j.split(/(=|<|>|<>|<=|>=)/)
+					let atribute = j.split(/(=|<|>|<>|<=|>=)/);
 
-					expressionsAtributesPriority.add(atribute[0].trim())
+					expressionsAtributesPriority.add(atribute[0].trim());
 					//expressions.splice(expressions.indexOf(j), 1);
 				}
 			}
 		}
 
-		expressionsAtributesPriority = new Array(...expressionsAtributesPriority)
-		expressionsPriority = new Array(...expressionsPriority)
+		expressionsAtributesPriority = new Array(...expressionsAtributesPriority);
+		expressionsPriority = new Array(...expressionsPriority);
 
 		bodies['WHERE'] = {
 			expression: bodies['WHERE'],
 			expressions: expressionsPriority,
 			atributes: expressionsAtributesPriority
-		}
+		};
 
 		bodies['WHERE']['atributes'].forEach((value, index) => {
 			for (let j of tables) {
 				if (databaseTable[j].includes(value)) {
-					tablesPriority.add(j)
+					tablesPriority.add(j);
 				}
 			}
-		})
+		});
 
-		bodies['tables'] = Array.from(tablesPriority)
+		bodies['tables'] = Array.from(tablesPriority);
 	} else {
-		bodies['tables'] = tables
+		bodies['tables'] = tables;
 	}
 
-	delete bodies['']
-	return bodies
+	delete bodies[''];
+	return bodies;
 }

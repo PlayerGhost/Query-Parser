@@ -1,92 +1,102 @@
-import { useState } from "react"
+import { useState } from 'react';
 
-import { removeWhitespaces } from "../helpers/text-parser"
-import { regex } from "../helpers/regex"
-import { generateGraphToPlot } from "../helpers/relationalAlgebra.js"
-import ZingChart from "zingchart-react"
-import "zingchart/es6"
-import "zingchart/modules-es6/zingchart-tree.min.js"
+import { removeWhitespaces } from '../helpers/text-parser';
+import { regex } from '../helpers/regex';
+import { generateGraphToPlot } from '../helpers/relationalAlgebra.js';
+// import ZingChart from 'zingchart-react';
+import 'zingchart/es6';
+import 'zingchart/modules-es6/zingchart-tree.min.js';
 
-import "./MainPage.css"
+import './MainPage.css';
 
-const ENTER_KEYCODE = 13
-const ERROR_MESSAGE_TIMEOUT = 3000
+const ENTER_KEYCODE = 13;
+const ERROR_MESSAGE_TIMEOUT = 3000;
 
 export default function MainPage() {
-	const [query, setQuery] = useState("")
-	const [error, setError] = useState("")
+	const [query, setQuery] = useState('');
+	const [error, setError] = useState('');
 
 	const onClick = () => {
 		if (!query) {
-			showErrorMessage("Sem query!")
-			return
+			showErrorMessage('Sem query!');
+			return;
 		}
 
-		const userQuery = query.replaceAll("\n", " ").toUpperCase()
-		const filteredQuery = removeWhitespaces(userQuery)
+		const userQuery = query.replaceAll('\n', ' ').toUpperCase();
 
-		if (!filteredQuery.match(regex)) {
-			console.warn("Query filtrada", filteredQuery)
-			showErrorMessage("Query não passou no regex de verificação inicial!")
-			return
+		if (!userQuery.match(regex)) {
+			console.warn('Query filtrada', userQuery);
+			showErrorMessage('Query não passou no regex de verificação inicial!');
+			return;
 		}
 
-		let graphTree
+		const filteredQuery = removeWhitespaces(userQuery);
+		let graphTree;
 		try {
 			graphTree = generateGraphToPlot(filteredQuery.replaceAll(';', ''));
 		} catch (err) {
-			console.log(err)
-			showErrorMessage("Houve algum erro gerando a árvore!")
+			console.log(err);
+			showErrorMessage('Houve algum erro gerando a árvore!');
 		}
 
 		let chartConfig = {
-			type: "tree",
+			type: 'tree',
+
 			options: {
-				aspect: "tree-down",
+				aspect: 'tree-down',
 				orgChart: true,
 
 				link: {
-					aspect: "line",
+					aspect: 'line'
 				},
 
 				node: {
-					backgroundColor: "rgba(0,0,0,0)",
-					width: "100%",
-					height: "100%",
+					backgroundColor: 'rgba(0,0,0,0)',
+					width: '100%',
+					height: '100%',
 
 					hoverState: {
-						visible: false,
+						visible: false
 					},
 
 					label: {
-						fontSize: "10px",
-						color: "#000000",
-					},
-				},
+						fontSize: '12px',
+						color: '#000000'
+					}
+				}
 			},
 
 			plot: {
-				layout: "auto",
+				exact: true,
+				smartSampling: true,
+				maxNodes: 0,
+				maxTrackers: 0
 			},
 
 			plotarea: {
-				margin: "40px 75px",
+				margin: '30px 85px'
 			},
 
-			series: graphTree,
-		}
+			series: graphTree
+		};
 
 		zingchart.render({
-			id: "graphDiv",
+			id: 'graphDiv',
 			data: chartConfig,
-		})
-	}
+			cache: {
+				data: false
+			}
+			// height: '100%',
+			// width: '100%',
+			// output: 'canvas'
+		});
+	};
 
 	const showErrorMessage = (message) => {
-		console.error(message)
-		setError(message)
-		setTimeout(() => setError(""), ERROR_MESSAGE_TIMEOUT)
-	}
+		console.error(message);
+		setError(message);
+		setTimeout(() => setError(''), ERROR_MESSAGE_TIMEOUT);
+	};
 
 	return (
 		<div className="main">
@@ -112,5 +122,5 @@ export default function MainPage() {
 				</div>
 			</section>
 		</div>
-	)
+	);
 }
