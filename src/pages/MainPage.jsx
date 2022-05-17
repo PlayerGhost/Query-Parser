@@ -1,6 +1,5 @@
 import { useState } from 'react';
 
-import { validateAttributes } from '../helpers/load-json';
 import { removeWhitespaces } from '../helpers/text-parser';
 import { regex } from '../helpers/regex';
 import { generateGraphToPlot } from '../helpers/relationalAlgebra.js';
@@ -15,7 +14,6 @@ const ERROR_MESSAGE_TIMEOUT = 3000;
 
 export default function MainPage() {
 	const [query, setQuery] = useState('');
-	const [result, setResult] = useState('');
 	const [error, setError] = useState('');
 
 	const onClick = () => {
@@ -24,7 +22,8 @@ export default function MainPage() {
 			return;
 		}
 
-		const filteredQuery = removeWhitespaces(query.toUpperCase());
+		const userQuery = query.replaceAll('\n', ' ').toUpperCase();
+		const filteredQuery = removeWhitespaces(userQuery);
 
 		if (!filteredQuery.match(regex)) {
 			console.warn('Query filtrada', filteredQuery);
@@ -76,7 +75,6 @@ export default function MainPage() {
 			series: graphTree
 		};
 
-		setResult(filteredQuery);
 		zingchart.render({
 			id: 'graphDiv',
 			data: chartConfig
@@ -94,14 +92,14 @@ export default function MainPage() {
 			<section className="corpo">
 				<h1>Processador de consultas - AV2</h1>
 				<div className="user-input">
-					<input
-						type="text"
+					<textarea
 						id="query"
 						placeholder="Insira sua consulta SQL."
 						value={query}
 						onChange={(q) => setQuery(q.target.value)}
 						onKeyDown={(e) => e.keyCode === ENTER_KEYCODE && onClick()}
-					></input>
+						rows={7}
+					></textarea>
 					<button id="parse-query" onClick={onClick}>
 						Executar
 					</button>
@@ -109,10 +107,7 @@ export default function MainPage() {
 				<div className="results">
 					<h2>Resultado da consulta</h2>
 					{Boolean(error) && <h3 className="error-message">Erro: {error}</h3>}
-					{Boolean(result) && <div id="results-body">{result}</div>}
-					<div id="graphDiv" className="graph--container">
-						{/* <ZingChart data={chartConfig} /> */}
-					</div>
+					<div id="graphDiv" className="graph--container"></div>
 				</div>
 			</section>
 		</div>
