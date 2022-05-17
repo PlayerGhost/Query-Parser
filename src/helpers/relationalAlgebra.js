@@ -354,7 +354,7 @@ function getNodeData(No) {
 		{
 			id: No.name,
 			parent: No.pai != null ? No.pai.name : '',
-			name: No.name
+			name: `${No.name} (${No.order})`
 		}
 	];
 
