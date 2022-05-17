@@ -1,117 +1,105 @@
-import { useState } from "react"
+import { useState } from 'react';
 
-import {
-	// getAttributesFromTable,
-	validateAttributes,
-} from "../helpers/load-json"
-import { removeWhitespaces } from "../helpers/text-parser"
-//import { regex } from '../helpers/regex';
-//import { splitQueryIntoBodies } from "../helpers/relationalAlgebra"
-import { generateGraphToPlot } from "../helpers/relationalAlgebra.js"
-import "zingchart/es6"
-import ZingChart from "zingchart-react"
-import "zingchart/modules-es6/zingchart-tree.min.js"
+import { removeWhitespaces } from '../helpers/text-parser';
+import { regex } from '../helpers/regex';
+import { generateGraphToPlot } from '../helpers/relationalAlgebra.js';
+import ZingChart from 'zingchart-react';
+import 'zingchart/es6';
+import 'zingchart/modules-es6/zingchart-tree.min.js';
 
-import "./MainPage.css"
+import './MainPage.css';
 
-const ENTER_KEYCODE = 13
-const ERROR_MESSAGE_TIMEOUT = 3000
+const ENTER_KEYCODE = 13;
+const ERROR_MESSAGE_TIMEOUT = 3000;
 
 export default function MainPage() {
-	const [query, setQuery] = useState("")
-	const [result, setResult] = useState("")
-	const [error, setError] = useState("")
+	const [query, setQuery] = useState('');
+	const [error, setError] = useState('');
 
 	const onClick = () => {
 		if (!query) {
-			showErrorMessage("Sem query!")
-			return
+			showErrorMessage('Sem query!');
+			return;
 		}
 
-		const filteredQuery = removeWhitespaces(query)
+		const userQuery = query.replaceAll('\n', ' ').toUpperCase();
+		const filteredQuery = removeWhitespaces(userQuery);
 
 		if (!filteredQuery.match(regex)) {
-			console.warn("Query filtrada", filteredQuery)
-			showErrorMessage("Query não passou no regex de verificação inicial!")
-			return
+			console.warn('Query filtrada', filteredQuery);
+			showErrorMessage('Query não passou no regex de verificação inicial!');
+			return;
 		}
 
-		/*const bodies = splitQueryIntoBodies(filteredQuery)
-		if (!bodies) {
-			showErrorMessage("Não foi possível decompor a query!")
+		let graphTree;
+		try {
+			graphTree = generateGraphToPlot(filteredQuery);
+		} catch (err) {
+			showErrorMessage('Houve algum erro gerando a árvore!');
 		}
 
-		if (!validateAttributes(bodies)) {
-			showErrorMessage("Algum atributo/tabela não existe no banco de dados!")
-		}
+		let chartConfig = {
+			type: 'tree',
+			options: {
+				aspect: 'tree-down',
+				orgChart: true,
 
-		setResult(JSON.stringify(bodies))*/
-	}
+				link: {
+					aspect: 'line'
+				},
+
+				node: {
+					backgroundColor: 'rgba(0,0,0,0)',
+					width: '100%',
+					height: '100%',
+
+					hoverState: {
+						visible: false
+					},
+
+					label: {
+						fontSize: '10px',
+						color: '#000000'
+					}
+				}
+			},
+
+			plot: {
+				layout: 'auto'
+			},
+
+			plotarea: {
+				margin: '40px 75px'
+			},
+
+			series: graphTree
+		};
+
+		zingchart.render({
+			id: 'graphDiv',
+			data: chartConfig
+		});
+	};
 
 	const showErrorMessage = (message) => {
-		console.error(message)
-		setError(message)
-		setTimeout(() => setError(""), ERROR_MESSAGE_TIMEOUT)
-	}
-
-	let chartConfig = {
-		type: "tree",
-		options: {
-			aspect: "tree-down",
-			orgChart: true,
-			link: {
-				aspect: "line",
-			},
-			//maxSize: 15,
-			//minSize: 5,
-			node: {
-				backgroundColor: "rgba(0,0,0,0)",
-				//width: "600%",
-				//height: '100%',
-				hoverState: {
-					visible: false,
-				},
-				label: {
-					fontSize: "10px",
-					color: "#000000"
-				},
-			},
-			
-			/*node: {
-				type: "circle",
-				tooltip: {
-					padding: "8px 10px",
-					borderRadius: "3px",
-				},
-			}, */
-		},
-
-		plotarea: {
-			marginLeft: 150,
-			marginRight: 150
-		},
-
-		series: generateGraphToPlot()
-
-		/*series: {
-			values: generateGraphToPlot(),
-			backgroundColor: '#FFC107'
-		},*/
-	}
+		console.error(message);
+		setError(message);
+		setTimeout(() => setError(''), ERROR_MESSAGE_TIMEOUT);
+	};
 
 	return (
 		<div className="main">
 			<section className="corpo">
 				<h1>Processador de consultas - AV2</h1>
 				<div className="user-input">
-					<input
-						type="text"
+					<textarea
 						id="query"
 						placeholder="Insira sua consulta SQL."
 						value={query}
 						onChange={(q) => setQuery(q.target.value)}
 						onKeyDown={(e) => e.keyCode === ENTER_KEYCODE && onClick()}
-					></input>
+						rows={7}
+					></textarea>
 					<button id="parse-query" onClick={onClick}>
 						Executar
 					</button>
@@ -119,14 +107,9 @@ export default function MainPage() {
 				<div className="results">
 					<h2>Resultado da consulta</h2>
 					{Boolean(error) && <h3 className="error-message">Erro: {error}</h3>}
-					{Boolean(result) && <div id="results-body">{result}</div>}
-					{
-						<div id="graphDiv">
-							<ZingChart data={chartConfig} />
-						</div>
-					}
+					<div id="graphDiv" className="graph--container"></div>
 				</div>
 			</section>
 		</div>
-	)
+	);
 }
