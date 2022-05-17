@@ -22,7 +22,7 @@ export default function MainPage() {
 			return;
 		}
 
-		const userQuery = query.replaceAll('\n', ' ').toUpperCase();
+		const userQuery = query.replaceAll('\n', ' ').toUpperCase().trim();
 
 		if (!userQuery.match(regex)) {
 			console.warn('Query filtrada', userQuery);
