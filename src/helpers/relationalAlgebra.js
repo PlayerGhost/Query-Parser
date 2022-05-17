@@ -8,9 +8,14 @@ export class TreeOptimizer {
 		this.leaves = [];
 		this.order = 0;
 		this.hasJoin = false;
+		this.hasWhere = false;
 
 		if (this.query.JOIN != undefined) {
 			this.hasJoin = true;
+		}
+
+		if (this.query.WHERE != undefined) {
+			this.hasWhere = true;
 		}
 
 		this.setupTree();
@@ -18,21 +23,25 @@ export class TreeOptimizer {
 
 	setupTree() {
 		for (let table of this.query.tables) {
-			let selections = this.getTableSelections(table, this.query.WHERE);
 			let tableNode = new No(table);
-			this.leaves.push(tableNode);
 
-			for (let selec of selections) {
-				let paiTableNode = new No('σ' + selec);
-				tableNode.setPai(paiTableNode);
-				paiTableNode.setEsquerdo(tableNode);
+			if (this.hasWhere) {
+				let selections = this.getTableSelections(table, this.query.WHERE);
+				this.leaves.push(tableNode);
 
-				tableNode = tableNode.getPai();
+				for (let selec of selections) {
+					let paiTableNode = new No('σ' + selec);
+					tableNode.setPai(paiTableNode);
+					paiTableNode.setEsquerdo(tableNode);
+
+					tableNode = tableNode.getPai();
+				}
 			}
 
 			let tableNodePai = new No(
 				'π' + this.getTableAtributes(table, this.query.SELECT)
 			);
+
 			tableNode.setPai(tableNodePai);
 			tableNodePai.setEsquerdo(tableNode);
 		}
@@ -263,8 +272,9 @@ class No {
 // const teste = "SELECT IDUSUARIO, NOME, DATANASCIMENTO, DESCRICAO, SALDOINICIAL, UF, DESCRIÇÃO FROM USUARIO JOIN CONTAS ON USUARIO.IDUSUARIO = CONTAS.USUARIO_IDUSUARIO JOIN TIPOCONTA ON TIPOCONTA.IDTIPOCONTA = CONTAS.TIPOCONTA_IDTIPOCONTA WHERE SALDOINICIAL < 3000 AND UF = 'CE' AND DESCRIÇÃO <> 'CONTA CORRENTE'";
 // const teste = "SELECT NOME, DATANASCIMENTO, DESCRICAO, SALDOINICIAL FROM USUARIO JOIN CONTAS ON USUARIO.IDUSUARIO = CONTAS.USUARIO_IDUSUARIO WHERE SALDOINICIAL >= 235 AND UF = 'CE' AND CEP <> '62930000'";
 // const teste = "SELECT IDUSUARIO, NOME, DATANASCIMENTO FROM USUARIO WHERE UF = 'CE' AND CEP <> '62930000'"
+const teste = 'SELECT IDUSUARIO, NOME, DATANASCIMENTO FROM USUARIO';
 
-// generateGraphToPlot(teste)
+generateGraphToPlot(teste);
 export function generateGraphToPlot(userQuery) {
 	const queryBodies = splitQueryIntoBodies(userQuery);
 	const tree = new TreeOptimizer(queryBodies).tree;
@@ -315,6 +325,7 @@ export function splitQueryIntoBodies(query) {
 	let keyWords = ['SELECT', 'FROM', 'JOIN', 'ON', 'WHERE'];
 	let auxKeyWord = '';
 	let hasJoin = false;
+	let hasWhere = false;
 
 	for (let word of mySqlStringSplitted) {
 		if (keyWords.includes(word)) {
@@ -377,47 +388,53 @@ export function splitQueryIntoBodies(query) {
 		});
 	}
 
-	let expressions = bodies['WHERE'].split('AND');
-	let expressionsPriority = new Set();
-	let expressionsAtributesPriority = new Set();
 	let tables = [bodies['FROM']];
-	let tablesPriority = new Set();
 
-	if (hasJoin) {
-		tables = tables.concat(bodies['JOIN']);
-	}
+	if (hasWhere) {
+		let expressions = bodies['WHERE'].split('AND');
+		let expressionsPriority = new Set();
+		let expressionsAtributesPriority = new Set();
 
-	for (let i of operatorsPriority) {
-		for (let j of expressions) {
-			if (j.includes(i)) {
-				expressionsPriority.add(j.trim());
+		let tablesPriority = new Set();
 
-				let atribute = j.split(/(=|<|>|<>|<=|>=)/);
+		if (hasJoin) {
+			tables = tables.concat(bodies['JOIN']);
+		}
 
-				expressionsAtributesPriority.add(atribute[0].trim());
-				//expressions.splice(expressions.indexOf(j), 1);
+		for (let i of operatorsPriority) {
+			for (let j of expressions) {
+				if (j.includes(i)) {
+					expressionsPriority.add(j.trim());
+
+					let atribute = j.split(/(=|<|>|<>|<=|>=)/);
+
+					expressionsAtributesPriority.add(atribute[0].trim());
+					//expressions.splice(expressions.indexOf(j), 1);
+				}
 			}
 		}
-	}
 
-	expressionsAtributesPriority = new Array(...expressionsAtributesPriority);
-	expressionsPriority = new Array(...expressionsPriority);
+		expressionsAtributesPriority = new Array(...expressionsAtributesPriority);
+		expressionsPriority = new Array(...expressionsPriority);
 
-	bodies['WHERE'] = {
-		expression: bodies['WHERE'],
-		expressions: expressionsPriority,
-		atributes: expressionsAtributesPriority
-	};
+		bodies['WHERE'] = {
+			expression: bodies['WHERE'],
+			expressions: expressionsPriority,
+			atributes: expressionsAtributesPriority
+		};
 
-	bodies['WHERE']['atributes'].forEach((value, index) => {
-		for (let j of tables) {
-			if (databaseTable[j].includes(value)) {
-				tablesPriority.add(j);
+		bodies['WHERE']['atributes'].forEach((value, index) => {
+			for (let j of tables) {
+				if (databaseTable[j].includes(value)) {
+					tablesPriority.add(j);
+				}
 			}
-		}
-	});
+		});
 
-	bodies['tables'] = Array.from(tablesPriority);
+		bodies['tables'] = Array.from(tablesPriority);
+	} else {
+		bodies['tables'] = tables;
+	}
 
 	delete bodies[''];
 	return bodies;

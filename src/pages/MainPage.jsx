@@ -15,8 +15,11 @@ const ERROR_MESSAGE_TIMEOUT = 3000;
 export default function MainPage() {
 	const [query, setQuery] = useState('');
 	const [error, setError] = useState('');
+	const [ok, setOk] = useState(false);
 
 	const onClick = () => {
+		setOk(false);
+
 		if (!query) {
 			showErrorMessage('Sem query!');
 			return;
@@ -36,6 +39,7 @@ export default function MainPage() {
 			graphTree = generateGraphToPlot(filteredQuery);
 		} catch (err) {
 			showErrorMessage('Houve algum erro gerando a árvore!');
+			return
 		}
 
 		let chartConfig = {
@@ -58,7 +62,7 @@ export default function MainPage() {
 					},
 
 					label: {
-						fontSize: '10px',
+						fontSize: '16px',
 						color: '#000000'
 					}
 				}
@@ -75,6 +79,8 @@ export default function MainPage() {
 			series: graphTree
 		};
 
+		setError('')
+		setOk(true);
 		zingchart.render({
 			id: 'graphDiv',
 			data: chartConfig
@@ -107,7 +113,7 @@ export default function MainPage() {
 				<div className="results">
 					<h2>Resultado da consulta</h2>
 					{Boolean(error) && <h3 className="error-message">Erro: {error}</h3>}
-					<div id="graphDiv" className="graph--container"></div>
+					{ok && <div id="graphDiv" className="graph--container"></div>}
 				</div>
 			</section>
 		</div>
