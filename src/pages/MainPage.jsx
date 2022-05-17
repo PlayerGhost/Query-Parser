@@ -26,15 +26,15 @@ export default function MainPage() {
 
 		const filteredQuery = removeWhitespaces(query.toUpperCase());
 
-		if (!filteredQuery.match(regex)) {
-			console.warn('Query filtrada', filteredQuery);
+		if (!query.match(regex)) {
+			console.warn('Query filtrada', query);
 			showErrorMessage('Query não passou no regex de verificação inicial!');
 			return;
 		}
 
 		let graphTree;
 		try {
-			graphTree = generateGraphToPlot(filteredQuery);
+			graphTree = generateGraphToPlot(filteredQuery.replaceAll(';', ''));
 		} catch (err) {
 			showErrorMessage('Houve algum erro gerando a árvore!');
 		}
@@ -99,7 +99,7 @@ export default function MainPage() {
 						id="query"
 						placeholder="Insira sua consulta SQL."
 						value={query}
-						onChange={(q) => setQuery(q.target.value)}
+						onChange={(q) => setQuery(q.target.value.toUpperCase())}
 						onKeyDown={(e) => e.keyCode === ENTER_KEYCODE && onClick()}
 					></input>
 					<button id="parse-query" onClick={onClick}>

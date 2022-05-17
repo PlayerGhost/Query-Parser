@@ -6,6 +6,7 @@ export class TreeOptimizer {
 	constructor(query) {
 		this.query = query;
 		this.leaves = [];
+		this.bottomNodes = [];
 		this.order = 0;
 		this.hasJoin = false;
 
@@ -14,6 +15,8 @@ export class TreeOptimizer {
 		}
 
 		this.setupTree();
+		this.setupBottomNodes();
+		this.calculateTreePriority()
 	}
 
 	setupTree() {
@@ -211,6 +214,68 @@ export class TreeOptimizer {
 	isAtributeFromTable(table, atribute) {
 		return databaseTable[table].includes(atribute);
 	}
+
+	calculateTreePriority() {
+		const priorityArray = []
+
+		for(let table of this.bottomNodes) {
+			let currentNode = table
+			while (currentNode != null) {
+				const operatorScore = {
+					'σ': 1,
+					'π': 5 * currentNode.name.split(',').length,
+					'⋈': 10
+				};
+				const currentScore = currentNode.order + (operatorScore[currentNode.name[0]] || 0);
+				// priorityArray[currentScore] = priorityArray[currentScore] || [];
+
+				if (!priorityArray.map(x => x[0]).includes(currentNode.name)) {
+					priorityArray.push([currentNode.name, currentScore]);
+				} else {
+					const existingIndex = priorityArray.map(x => x[0]).indexOf(currentNode.name)
+					priorityArray[existingIndex][1] = Math.max(priorityArray[existingIndex][1], currentScore)
+				}
+
+				if (currentNode.pai) {
+					currentNode.pai.order += currentScore
+				}
+
+				currentNode = currentNode.pai
+			}
+		}
+
+		priorityArray.sort((a, b )=> (a[1] - b[1]))
+		console.log('aqui ó', priorityArray)
+	}
+
+	setupBottomNodes() {
+		this.bottomNodes = []
+		this.lookForBottomNode(this.tree);
+		this.bottomNodes = this.bottomNodes.filter(
+			(n) => n.esquerdo == n.direito && n.direito == null
+		);
+	}
+
+	lookForBottomNode(currentNode) {
+		if (currentNode == null) return
+
+		if (currentNode.esquerdo != null) {
+			this.lookForBottomNode(currentNode.esquerdo)
+		}
+
+		this.bottomNodes.push(currentNode)
+
+		if (currentNode.direito != null) {
+			this.lookForBottomNode(currentNode.direito)
+		}
+	}
+
+	// calculateNodePriority(currentNode, isGoingDown, accumulatedScore) {
+	// 	if (currentNode == null) return accumulatedScore
+	// 	if (isGoingDown) {
+	// 		return calcu
+	// 	}
+	// }
 }
 
 class No {
@@ -219,7 +284,7 @@ class No {
 		this.pai = null;
 		this.esquerdo = null;
 		this.direito = null;
-		this.order = -1;
+		this.order = 0;
 
 		if (name.startsWith('σ')) {
 			this.priority = operatorsPriority.indexOf(name.split(' ')[1]);
@@ -261,10 +326,10 @@ class No {
 }
 
 // const teste = "SELECT IDUSUARIO, NOME, DATANASCIMENTO, DESCRICAO, SALDOINICIAL, UF, DESCRIÇÃO FROM USUARIO JOIN CONTAS ON USUARIO.IDUSUARIO = CONTAS.USUARIO_IDUSUARIO JOIN TIPOCONTA ON TIPOCONTA.IDTIPOCONTA = CONTAS.TIPOCONTA_IDTIPOCONTA WHERE SALDOINICIAL < 3000 AND UF = 'CE' AND DESCRIÇÃO <> 'CONTA CORRENTE'";
-// const teste = "SELECT NOME, DATANASCIMENTO, DESCRICAO, SALDOINICIAL FROM USUARIO JOIN CONTAS ON USUARIO.IDUSUARIO = CONTAS.USUARIO_IDUSUARIO WHERE SALDOINICIAL >= 235 AND UF = 'CE' AND CEP <> '62930000'";
+const teste = "SELECT NOME, DATANASCIMENTO, DESCRICAO, SALDOINICIAL FROM USUARIO JOIN CONTAS ON USUARIO.IDUSUARIO = CONTAS.USUARIO_IDUSUARIO WHERE SALDOINICIAL >= 235 AND UF = 'CE' AND CEP <> '62930000'";
 // const teste = "SELECT IDUSUARIO, NOME, DATANASCIMENTO FROM USUARIO WHERE UF = 'CE' AND CEP <> '62930000'"
 
-// generateGraphToPlot(teste)
+generateGraphToPlot(teste)
 export function generateGraphToPlot(userQuery) {
 	const queryBodies = splitQueryIntoBodies(userQuery);
 	const tree = new TreeOptimizer(queryBodies).tree;
