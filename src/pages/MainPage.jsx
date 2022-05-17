@@ -33,8 +33,7 @@ export default function MainPage() {
 
 		let graphTree
 		try {
-			console.log("aaa", filteredQuery.replaceAll(";", ""))
-			graphTree = generateGraphToPlot(filteredQuery.replaceAll(";", ""))
+			graphTree = generateGraphToPlot(filteredQuery.replaceAll(';', ''));
 		} catch (err) {
 			console.log(err)
 			showErrorMessage("Houve algum erro gerando a árvore!")
@@ -98,7 +97,7 @@ export default function MainPage() {
 						id="query"
 						placeholder="Insira sua consulta SQL."
 						value={query}
-						onChange={(q) => setQuery(q.target.value)}
+						onChange={(q) => setQuery(q.target.value.toUpperCase())}
 						onKeyDown={(e) => e.keyCode === ENTER_KEYCODE && onClick()}
 						rows={7}
 					></textarea>
