@@ -2,7 +2,12 @@ import { useState } from "react"
 
 import { removeWhitespaces } from "../helpers/text-parser"
 import { regex } from "../helpers/regex"
-import { generateGraphToPlot } from "../helpers/relationalAlgebra.js"
+import { getTableFromAtt } from "../helpers/db"
+// import { validateAttributes } from "../helpers/load-json"
+import {
+	generateGraphToPlot,
+	splitQueryIntoBodies,
+} from "../helpers/relationalAlgebra.js"
 // import ZingChart from 'zingchart-react';
 import "zingchart/es6"
 import "zingchart/modules-es6/zingchart-tree.min.js"
@@ -32,11 +37,51 @@ export default function MainPage() {
 		}
 
 		const filteredQuery = removeWhitespaces(userQuery)
+		const bodies = splitQueryIntoBodies(filteredQuery)
+
+		for (let table of bodies.SELECT.split(",")) {
+			const attributeExists = Boolean(getTableFromAtt(table.trim()))
+			if (!attributeExists) {
+				showErrorMessage(
+					"Houve algum erro verificando se todos os atributos existem!"
+				)
+				return
+			}
+		}
+
+		for (let table of bodies.WHERE.atributes) {
+			const attributeExists = Boolean(getTableFromAtt(table.trim()))
+
+			if (!attributeExists) {
+				showErrorMessage(
+					"Houve algum erro verificando se todos os atributos existem!"
+				)
+				return
+			}
+		}
+
+		for (let table of bodies.ON) {
+			if (!Boolean(getTableFromAtt(table.left.atribute))) {
+				showErrorMessage(
+					"Houve algum erro verificando se todos os atributos do join existem!"
+				)
+				return
+			}
+			if (!Boolean(getTableFromAtt(table.right.atribute))) {
+				showErrorMessage(
+					"Houve algum erro verificando se todos os atributos do join existem!"
+				)
+				return
+			}
+		}
+		// if (!validateAttributes(bodies.tables, bodies.SELECT)) {
+		// 	showErrorMessage("Houve algum erro ao verificar os atributos/tabelas!")
+		// 	return
+		// }
 		let graphTree
 		try {
 			graphTree = generateGraphToPlot(filteredQuery.replaceAll(";", ""))
 		} catch (err) {
-			console.log(err)
 			showErrorMessage("Houve algum erro gerando a árvore!")
 		}
 
@@ -61,7 +106,7 @@ export default function MainPage() {
 					},
 
 					label: {
-						fontSize: "12px",
+						fontSize: "15px",
 						color: "#000000",
 					},
 				},
@@ -75,7 +120,7 @@ export default function MainPage() {
 			},
 
 			plotarea: {
-				margin: "30px 85px",
+				margin: "30px 155px",
 			},
 
 			series: graphTree,
@@ -97,8 +142,9 @@ export default function MainPage() {
 
 	const showErrorMessage = (message) => {
 		document.getElementById("graphDiv").style.display = "none"
-		console.error(message)
+
 		setError(message)
+
 		setTimeout(() => setError(""), ERROR_MESSAGE_TIMEOUT)
 	}
 
