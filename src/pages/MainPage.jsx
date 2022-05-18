@@ -38,9 +38,8 @@ export default function MainPage() {
 
 		const filteredQuery = removeWhitespaces(userQuery)
 		const bodies = splitQueryIntoBodies(filteredQuery)
-		// console.log("tabelas", bodies)
+
 		for (let table of bodies.SELECT.split(",")) {
-			// console.log("uoooooooou", getTableFromAtt(table.trim()))
 			const attributeExists = Boolean(getTableFromAtt(table.trim()))
 			if (!attributeExists) {
 				showErrorMessage(
@@ -51,8 +50,8 @@ export default function MainPage() {
 		}
 
 		for (let table of bodies.WHERE.atributes) {
-			// console.log("uoooooooou", getTableFromAtt(table.trim()))
 			const attributeExists = Boolean(getTableFromAtt(table.trim()))
+
 			if (!attributeExists) {
 				showErrorMessage(
 					"Houve algum erro verificando se todos os atributos existem!"
@@ -62,9 +61,6 @@ export default function MainPage() {
 		}
 
 		for (let table of bodies.ON) {
-			// console.log("uoooooooou", getTableFromAtt(table.trim()))
-			console.log("drhrth", table.left.atribute)
-			console.log("drhrth", table.right.atribute)
 			if (!Boolean(getTableFromAtt(table.left.atribute))) {
 				showErrorMessage(
 					"Houve algum erro verificando se todos os atributos do join existem!"
@@ -86,7 +82,6 @@ export default function MainPage() {
 		try {
 			graphTree = generateGraphToPlot(filteredQuery.replaceAll(";", ""))
 		} catch (err) {
-			console.log(err)
 			showErrorMessage("Houve algum erro gerando a árvore!")
 		}
 
@@ -147,8 +142,9 @@ export default function MainPage() {
 
 	const showErrorMessage = (message) => {
 		document.getElementById("graphDiv").style.display = "none"
-		console.error(message)
+
 		setError(message)
+
 		setTimeout(() => setError(""), ERROR_MESSAGE_TIMEOUT)
 	}
 
