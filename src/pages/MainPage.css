@@ -63,6 +63,7 @@ h1 {
 	width: 100%;
 	padding: 10px 15px;
 	border-radius: 10px;
+	font-size: 20px;
 }
 
 #parse-query {
@@ -97,4 +98,8 @@ h1 {
 	border-radius: 5px;
 	border: 0.3px solid #800080;
 	min-width: 100%;
+}
+
+textarea {
+	border: 1px solid #800080;
 }
