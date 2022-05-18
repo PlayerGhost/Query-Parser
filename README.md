@@ -7,3 +7,7 @@ Digite o comando `npm install` para instalar as dependências do projeto.
 ### Rodando Projeto
 
 Digite o comando `npm run dev` para rodar a aplicação.
+
+### Preview
+
+https://playerghost.github.io/Query-Parser/
